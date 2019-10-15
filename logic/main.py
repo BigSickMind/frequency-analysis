@@ -1,7 +1,9 @@
 import sys
 
 from frames.main import Ui_FrameDefault
+
 from logic.error import FrameError
+from logic.info import FrameInfo, get_info
 
 from PyQt5.QtWidgets import *
 
@@ -19,6 +21,8 @@ class Main(QMainWindow):
         self.ui.actionOpen.triggered.connect(self.open_file)
         self.ui.actionExit.triggered.connect(self.exit)
 
+        self.ui.actionInfo.triggered.connect(self.get_info)
+
         # self.ui.actionAbout.triggered.connect(self.about)
 
         self.show()
@@ -29,21 +33,35 @@ class Main(QMainWindow):
 
     def open_file(self):
         options = QFileDialog.Options()
-        self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", "",
+        # TODO: default directory?
+        directory = "D:/Github/frequency-analysis/tests/"
+        # directory = ""
+        self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
                                                    "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
                                                    options=options)
+        # TODO: if nothing chose - use old wav-file
         self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
 
-        # if error (TEST)
-        self.error = FrameError('1')
+        self.wav_info, self.message = get_info(self.path, self.filename)
 
-        # if correct file
+        if not self.wav_info:
+            if self.path:
+                self.error = FrameError(self.message)
 
-        # self.ui.renameWindowTitle(self.FrameDefault, self.path)
+            self.ui.renameWindowTitle(self.FrameDefault)
 
-        # self.ui.actionInfo.setEnabled(True)
-        # self.ui.actionSpectre.setEnabled(True)
-        # self.ui.actionAnalysis.setEnabled(True)
+            self.ui.actionInfo.setEnabled(False)
+            self.ui.actionSpectre.setEnabled(False)
+            self.ui.actionAnalysis.setEnabled(False)
+        else:
+            self.ui.renameWindowTitle(self.FrameDefault, self.path)
+
+            self.ui.actionInfo.setEnabled(True)
+            self.ui.actionSpectre.setEnabled(True)
+            self.ui.actionAnalysis.setEnabled(True)
+
+    def get_info(self):
+        self.info = FrameInfo(self.wav_info)
 
 
 if __name__ == '__main__':
@@ -54,6 +72,11 @@ if __name__ == '__main__':
 
 # return FrameDefault
 #
-# def renameWindowTitle(self, FrameDefault, path):
+# def renameWindowTitle(self, FrameDefault, path=""):
+#     if not path:
+#         title = "Частотный анализатор"
+#     else:
+#         title = "Частотный анализатор ({})".format(path)
+#
 #     _translate = QtCore.QCoreApplication.translate
-#     FrameDefault.setWindowTitle(_translate("FrameDefault", "Частотный анализатор ({})".format(path)))
+#     FrameDefault.setWindowTitle(_translate("FrameDefault", title))

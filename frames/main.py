@@ -84,6 +84,11 @@ class Ui_FrameDefault(object):
         self.actionAnalysis.setText(_translate("FrameDefault", "Начать анализ"))
         self.actionAnalysis.setStatusTip(_translate("FrameDefault", "Анализ на наличие внесённых изменений"))
 
-    def renameWindowTitle(self, FrameDefault, path):
+    def renameWindowTitle(self, FrameDefault, path=""):
+        if not path:
+            title = "Частотный анализатор"
+        else:
+            title = "Частотный анализатор ({})".format(path)
+
         _translate = QtCore.QCoreApplication.translate
-        FrameDefault.setWindowTitle(_translate("FrameDefault", "Частотный анализатор ({})".format(path)))
+        FrameDefault.setWindowTitle(_translate("FrameDefault", title))

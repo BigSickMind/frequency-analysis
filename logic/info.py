@@ -1,79 +1,113 @@
 import struct
 
+from frames.info import Ui_FrameInfo
 
-def get_info(filename, path):
-    file_format = filename[(filename.rfind('.') + 1)::]
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
+
+INVALID_FORMAT = "Некорректный формат файла."
+CORRUPT = "Не удаётся открыть файл. Возможно он повреждён."
+
+
+class FrameInfo(QWidget):
+    def __init__(self, wav_info):
+        super(FrameInfo, self).__init__()
+
+        self.ui = Ui_FrameInfo()
+        self.ui.setupUi(self)
+
+        self.ui.buttonOk.clicked.connect(self.ok)
+        self.fill_table(wav_info)
+
+        self.show()
+
+    def ok(self):
+        self.close()
+
+    def fill_table(self, wav_info):
+        rows = self.ui.tableInfo.rowCount()
+        columns = self.ui.tableInfo.columnCount()
+        for i in range(rows):
+            for j in range(columns):
+                item = QTableWidgetItem(str(wav_info[i + j]))
+                item.setFlags(Qt.ItemIsEnabled)
+                # TODO: remove scroll, remove resizing rows
+                self.ui.tableInfo.setItem(i, j, item)
+
+
+def get_info(path, filename):
+    wav_info = []
+
+    file_format = path[(path.rfind('.') + 1):]
     if file_format != 'wav':
-        # Show Window with error
-        return
+        return wav_info, INVALID_FORMAT
     file = open(path, "rb")
-    # self.ui.parameters_text.append("Начинается анализ wav-файла: {}\n".format(self.filename))
-    flag = True
+
     ChunkID = str(file.read(4), encoding="utf-8")
     if ChunkID != 'RIFF':
-        flag = False
-    ChunkSizeString = file.read(4)
-    ChunkSize = struct.unpack('I', ChunkSizeString)
-    TotalSize = ChunkSize[0] + 8
+        return wav_info, CORRUPT
+
+    ChunkSize = struct.unpack('I', file.read(4))[0]
+    # TODO: NEED?
+    TotalSize = ChunkSize + 8
+
     Format = str(file.read(4), encoding="utf-8")
-
     if Format != 'WAVE':
-        flag = False
+        return wav_info, CORRUPT
 
-    SubChunk1ID = str(file.read(4), encoding="utf-8")
+    Subchunk1ID = str(file.read(4), encoding="utf-8")
+    if Subchunk1ID != 'fmt ':
+        return wav_info, CORRUPT
 
-    if SubChunk1ID != 'fmt ':
-        flag = False
+    Subchunk1Size = struct.unpack("I", file.read(4))[0]
+    AudioFormat = struct.unpack("H", file.read(2))[0]
+    NumChannels = struct.unpack("H", file.read(2))[0]
+    SampleRate = struct.unpack("I", file.read(4))[0]
+    ByteRate = struct.unpack("I", file.read(4))[0]
+    BlockAlign = struct.unpack("H", file.read(2))[0]
+    BitsPerSample = struct.unpack("H", file.read(2))[0]
 
-    SubChunk1SizeString = file.read(4)
-    SubChunk1Size = struct.unpack("I", SubChunk1SizeString)
+    Subchunk2ID = str(file.read(4), encoding="utf-8")
+    if Subchunk2ID != 'data':
+        return wav_info, CORRUPT
 
-    AudioFormatString = file.read(2)
-    AudioFormat = struct.unpack("H", AudioFormatString)
+    Subchunk2Size = struct.unpack("I", file.read(4))[0]
 
-    NumChannelsString = file.read(2)
-    NumChannels = struct.unpack("H", NumChannelsString)
+    if ByteRate != SampleRate * NumChannels * BitsPerSample // 8:
+        return wav_info, CORRUPT
 
-    SampleRateString = file.read(4)
-    SampleRate = struct.unpack("I", SampleRateString)
+    if BlockAlign != NumChannels * BitsPerSample // 8:
+        return wav_info, CORRUPT
 
-    ByteRateString = file.read(4)
-    ByteRate = struct.unpack("I", ByteRateString)
+    # TODO: add formats: Gz, Mb, etc. Convert to b, Kb, Mb or Gb
+    #  Add translation for Format: PCM = 1, etc. Find another Formats
+    #  Convert ints to str
 
-    BlockAlignString = file.read(2)
-    BlockAlign = struct.unpack("H", BlockAlignString)
+    wav_info = [filename, TotalSize, ChunkID, ChunkSize, Format, Subchunk1ID, Subchunk1Size, AudioFormat, NumChannels,
+                SampleRate, ByteRate, BlockAlign, BitsPerSample, Subchunk2ID, Subchunk2Size]
 
-    BitsPerSampleString = file.read(2)
-    BitsPerSample = struct.unpack("H", BitsPerSampleString)
+    return wav_info, ""
 
-    SubChunk2ID = str(file.read(4), encoding="utf-8")
-
-    if SubChunk2ID != 'data':
-        flag = False
-
-    SubChunk2SizeString = file.read(4)
-    SubChunk2Size = struct.unpack("I", SubChunk2SizeString)
-
-    if flag:
-        self.ui.parameters_text.append('Параметры аудиофайла {}:\n'.format(self.filename))
-        self.ui.parameters_text.append("ChunkID = {}\n".format(ChunkID))
-        self.ui.parameters_text.append("Формат = {}\n".format(Format))
-        self.ui.parameters_text.append("SubChunk1ID = {}\n".format(SubChunk1ID))
-        self.ui.parameters_text.append("Размер SubChunk1 = {} байт\n".format(str(SubChunk1Size[0])))
-        self.ui.parameters_text.append("AudioFormat = {}\n".format(str(AudioFormat[0])))
-        self.ui.parameters_text.append("Количество каналов = {}\n".format(str(NumChannels[0])))
-        self.ui.parameters_text.append("Частота дискретизации = {} Гц\n".format(str(SampleRate[0])))
-        self.ui.parameters_text.append("Байтрейт = {} байт/сек\n".format(str(ByteRate[0])))
-        self.ui.parameters_text.append("BlockAlign = {}\n".format(str(BlockAlign[0])))
-        self.ui.parameters_text.append("Бит на семпл = {} бит\n".format(str(BitsPerSample[0])))
-        self.ui.parameters_text.append("SubChunk2ID = {}\n".format(SubChunk2ID))
-        self.ui.parameters_text.append("Размер SubChunk2 = {} Мб\n".format(str(SubChunk2Size[0] / (1024 * 1024))))
-        self.ui.parameters_text.append("Исходный размер = {} Мб\n".format(str(TotalSize / (1024 * 1024))))
-
-        self.ui.parameters_text.append('Наличие изменений в аудиофайле {}:\n'.format(self.filename))
-
-        self.frequency_analysing()
-
-        self.ui.parameters_text.append("Анализ файла {} закончен".format(self.filename))
-    else:
-        self.ui.parameters_text.append("Ваш wav-файл повреждён, программа завершена")
+    # if flag:
+    #     self.ui.parameters_text.append('Параметры аудиофайла {}:\n'.format(self.filename))
+    #     self.ui.parameters_text.append("ChunkID = {}\n".format(ChunkID))
+    #     self.ui.parameters_text.append("Формат = {}\n".format(Format))
+    #     self.ui.parameters_text.append("Subchunk1ID = {}\n".format(Subchunk1ID))
+    #     self.ui.parameters_text.append("Размер SubChunk1 = {} байт\n".format(str(Subchunk1Size[0])))
+    #     self.ui.parameters_text.append("AudioFormat = {}\n".format(str(AudioFormat[0])))
+    #     self.ui.parameters_text.append("Количество каналов = {}\n".format(str(NumChannels[0])))
+    #     self.ui.parameters_text.append("Частота дискретизации = {} Гц\n".format(str(SampleRate[0])))
+    #     self.ui.parameters_text.append("Байтрейт = {} байт/сек\n".format(str(ByteRate[0])))
+    #     self.ui.parameters_text.append("BlockAlign = {}\n".format(str(BlockAlign[0])))
+    #     self.ui.parameters_text.append("Бит на семпл = {} бит\n".format(str(BitsPerSample[0])))
+    #     self.ui.parameters_text.append("Subchunk2ID = {}\n".format(Subchunk2ID))
+    #     self.ui.parameters_text.append("Размер SubChunk2 = {} Мб\n".format(str(Subchunk2Size[0] / (1024 * 1024))))
+    #     self.ui.parameters_text.append("Исходный размер = {} Мб\n".format(str(TotalSize / (1024 * 1024))))
+    #
+    #     self.ui.parameters_text.append('Наличие изменений в аудиофайле {}:\n'.format(self.filename))
+    #
+    #     self.frequency_analysing()
+    #
+    #     self.ui.parameters_text.append("Анализ файла {} закончен".format(self.filename))
+    # else:
+    #     self.ui.parameters_text.append("Ваш wav-файл повреждён, программа завершена")
