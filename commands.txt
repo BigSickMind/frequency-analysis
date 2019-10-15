@@ -1,1 +1,2 @@
 pyuic5.exe D:\Github\frequency-analysis\ui\main.ui > D:\Github\frequency-analysis\frames\main.py
+pyuic5.exe D:\Github\frequency-analysis\ui\error.ui > D:\Github\frequency-analysis\frames\error.py

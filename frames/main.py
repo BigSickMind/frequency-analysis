@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'D:\Github\frequency-analysis\ui\main.ui'
-#
-# Created by: PyQt5 UI code generator 5.10.1
-#
-# WARNING! All changes made in this file will be lost!
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -44,8 +36,6 @@ class Ui_FrameDefault(object):
         self.actionExit = QtWidgets.QAction(FrameDefault)
         self.actionExit.setObjectName("actionExit")
         self.actionInfo = QtWidgets.QAction(FrameDefault)
-        self.actionInfo.setCheckable(False)
-        self.actionInfo.setChecked(False)
         self.actionInfo.setEnabled(False)
         self.actionInfo.setObjectName("actionInfo")
         self.actionSpectre = QtWidgets.QAction(FrameDefault)

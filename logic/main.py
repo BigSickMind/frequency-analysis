@@ -1,6 +1,7 @@
 import sys
 
 from frames.main import Ui_FrameDefault
+from logic.error import FrameError
 
 from PyQt5.QtWidgets import *
 
@@ -16,7 +17,6 @@ class Main(QMainWindow):
         self.FrameDefault = self.ui.setupUi(self)
 
         self.ui.actionOpen.triggered.connect(self.open_file)
-        # self.ui.actionClose.triggered.connect(self.close_file)
         self.ui.actionExit.triggered.connect(self.exit)
 
         # self.ui.actionAbout.triggered.connect(self.about)
@@ -34,13 +34,16 @@ class Main(QMainWindow):
                                                    options=options)
         self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
 
-        self.ui.renameWindowTitle(self.FrameDefault, self.path)
+        # if error (TEST)
+        self.error = FrameError('1')
 
         # if correct file
 
-        self.ui.actionInfo.setEnabled(True)
-        self.ui.actionSpectre.setEnabled(True)
-        self.ui.actionAnalysis.setEnabled(True)
+        # self.ui.renameWindowTitle(self.FrameDefault, self.path)
+
+        # self.ui.actionInfo.setEnabled(True)
+        # self.ui.actionSpectre.setEnabled(True)
+        # self.ui.actionAnalysis.setEnabled(True)
 
 
 if __name__ == '__main__':
