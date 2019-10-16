@@ -1,6 +1,6 @@
 import struct
 
-from frames.info import Ui_FrameInfo
+from frames.header import Ui_FrameHeader
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
@@ -8,15 +8,26 @@ from PyQt5.QtCore import Qt
 INVALID_FORMAT = "Некорректный формат файла."
 CORRUPT = "Не удаётся открыть файл. Возможно он повреждён."
 
+FORMAT = {
+    0: "бит",
+    1: "байт",
+    2: "Кбайт",
+    3: "Мбайт",
+    4: "Гбайт"
+}
 
-class FrameInfo(QWidget):
+DELETIONS = (8, 1024, 1024, 1024, 1024, )
+
+
+class FrameHeader(QWidget):
     def __init__(self, wav_info):
-        super(FrameInfo, self).__init__()
+        super(FrameHeader, self).__init__()
 
-        self.ui = Ui_FrameInfo()
+        self.ui = Ui_FrameHeader()
         self.ui.setupUi(self)
 
         self.ui.buttonOk.clicked.connect(self.ok)
+
         self.fill_table(wav_info)
 
         self.show()
@@ -25,17 +36,34 @@ class FrameInfo(QWidget):
         self.close()
 
     def fill_table(self, wav_info):
+        self.ui.tableInfo.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.ui.tableInfo.verticalHeader().setDefaultSectionSize(30)
+
         rows = self.ui.tableInfo.rowCount()
         columns = self.ui.tableInfo.columnCount()
         for i in range(rows):
             for j in range(columns):
                 item = QTableWidgetItem(str(wav_info[i + j]))
                 item.setFlags(Qt.ItemIsEnabled)
-                # TODO: remove scroll, remove resizing rows
                 self.ui.tableInfo.setItem(i, j, item)
 
 
-def get_info(path, filename):
+def format_determine(value):
+    deletions = 0
+
+    while deletions < 4:
+        val = value / DELETIONS[deletions]
+
+        if val <= 1:
+            return "{} {}".format(round(value), FORMAT[deletions])
+
+        value = val
+        deletions += 1
+
+    return "{} {}".format(round(value), FORMAT[deletions])
+
+
+def get_header(path, filename):
     wav_info = []
 
     file_format = path[(path.rfind('.') + 1):]
@@ -48,8 +76,6 @@ def get_info(path, filename):
         return wav_info, CORRUPT
 
     ChunkSize = struct.unpack('I', file.read(4))[0]
-    # TODO: NEED?
-    TotalSize = ChunkSize + 8
 
     Format = str(file.read(4), encoding="utf-8")
     if Format != 'WAVE':
@@ -79,12 +105,15 @@ def get_info(path, filename):
     if BlockAlign != NumChannels * BitsPerSample // 8:
         return wav_info, CORRUPT
 
-    # TODO: add formats: Gz, Mb, etc. Convert to b, Kb, Mb or Gb
+    # TODO: add formats: Gz, Mb, etc.
+    #  Convert to b, Kb, Mb or Gb
     #  Add translation for Format: PCM = 1, etc. Find another Formats
     #  Convert ints to str
 
-    wav_info = [filename, TotalSize, ChunkID, ChunkSize, Format, Subchunk1ID, Subchunk1Size, AudioFormat, NumChannels,
-                SampleRate, ByteRate, BlockAlign, BitsPerSample, Subchunk2ID, Subchunk2Size]
+    wav_info = [filename, ChunkID, format_determine(ChunkSize), Format, Subchunk1ID, "{} бит".format(Subchunk1Size),
+                AudioFormat, NumChannels, "{} Гц".format(SampleRate), "{} байт/сек".format(ByteRate),
+                "{} байт".format(BlockAlign), "{} бит".format(BitsPerSample), Subchunk2ID,
+                format_determine(Subchunk2Size)]
 
     return wav_info, ""
 

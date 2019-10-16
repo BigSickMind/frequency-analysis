@@ -24,7 +24,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../icons/icon.png</normaloff>../icons/icon.png</iconset>
+    <normaloff>../icons/main.png</normaloff>../icons/main.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
@@ -49,7 +49,7 @@
     <property name="title">
      <string>Анализ</string>
     </property>
-    <addaction name="actionInfo"/>
+    <addaction name="actionHeader"/>
     <addaction name="actionSpectre"/>
     <addaction name="separator"/>
     <addaction name="actionAnalysis"/>
@@ -58,6 +58,8 @@
     <property name="title">
      <string>Справка</string>
     </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menu_file"/>
@@ -100,7 +102,7 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionInfo">
+  <action name="actionHeader">
    <property name="checkable">
     <bool>false</bool>
    </property>
@@ -111,10 +113,10 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Информация об аудиофайле</string>
+    <string>Данные из заголовка</string>
    </property>
    <property name="statusTip">
-    <string>Информация об аудиофайле</string>
+    <string>Данные из заголовка</string>
    </property>
   </action>
   <action name="actionSpectre">
@@ -137,6 +139,14 @@
    </property>
    <property name="statusTip">
     <string>Анализ на наличие внесённых изменений</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Справка</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
  </widget>

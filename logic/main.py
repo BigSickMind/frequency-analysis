@@ -3,7 +3,7 @@ import sys
 from frames.main import Ui_FrameDefault
 
 from logic.error import FrameError
-from logic.info import FrameInfo, get_info
+from logic.header import FrameHeader, get_header
 
 from PyQt5.QtWidgets import *
 
@@ -21,7 +21,7 @@ class Main(QMainWindow):
         self.ui.actionOpen.triggered.connect(self.open_file)
         self.ui.actionExit.triggered.connect(self.exit)
 
-        self.ui.actionInfo.triggered.connect(self.get_info)
+        self.ui.actionHeader.triggered.connect(self.get_header)
 
         # self.ui.actionAbout.triggered.connect(self.about)
 
@@ -39,29 +39,28 @@ class Main(QMainWindow):
         self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
                                                    "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
                                                    options=options)
-        # TODO: if nothing chose - use old wav-file
-        self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
+        if self.path:
+            self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
 
-        self.wav_info, self.message = get_info(self.path, self.filename)
+            self.wav_info, self.message = get_header(self.path, self.filename)
 
-        if not self.wav_info:
-            if self.path:
+            if not self.wav_info:
                 self.error = FrameError(self.message)
 
-            self.ui.renameWindowTitle(self.FrameDefault)
+                self.ui.renameWindowTitle(self.FrameDefault)
 
-            self.ui.actionInfo.setEnabled(False)
-            self.ui.actionSpectre.setEnabled(False)
-            self.ui.actionAnalysis.setEnabled(False)
-        else:
-            self.ui.renameWindowTitle(self.FrameDefault, self.path)
+                self.ui.actionHeader.setEnabled(False)
+                self.ui.actionSpectre.setEnabled(False)
+                self.ui.actionAnalysis.setEnabled(False)
+            else:
+                self.ui.renameWindowTitle(self.FrameDefault, self.path)
 
-            self.ui.actionInfo.setEnabled(True)
-            self.ui.actionSpectre.setEnabled(True)
-            self.ui.actionAnalysis.setEnabled(True)
+                self.ui.actionHeader.setEnabled(True)
+                self.ui.actionSpectre.setEnabled(True)
+                self.ui.actionAnalysis.setEnabled(True)
 
-    def get_info(self):
-        self.info = FrameInfo(self.wav_info)
+    def get_header(self):
+        self.info = FrameHeader(self.wav_info)
 
 
 if __name__ == '__main__':
