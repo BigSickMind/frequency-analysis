@@ -4,6 +4,7 @@ from frames.main import Ui_FrameDefault
 
 from logic.error import FrameError
 from logic.header import FrameHeader, get_header
+from logic.spectrum import FrameSpectrum
 
 from PyQt5.QtWidgets import *
 
@@ -22,6 +23,7 @@ class Main(QMainWindow):
         self.ui.actionExit.triggered.connect(self.exit)
 
         self.ui.actionHeader.triggered.connect(self.get_header)
+        self.ui.actionSpectrum.triggered.connect(self.plot_spectrum)
 
         # self.ui.actionAbout.triggered.connect(self.about)
 
@@ -49,18 +51,30 @@ class Main(QMainWindow):
 
                 self.ui.renameWindowTitle(self.FrameDefault)
 
-                self.ui.actionHeader.setEnabled(False)
-                self.ui.actionSpectre.setEnabled(False)
-                self.ui.actionAnalysis.setEnabled(False)
+                if self.ui.actionHeader.isEnabled():
+                    self.ui.actionHeader.setEnabled(False)
+                    self.ui.actionSpectrum.setEnabled(False)
+                    self.ui.actionAnalysis.setEnabled(False)
             else:
                 self.ui.renameWindowTitle(self.FrameDefault, self.path)
 
-                self.ui.actionHeader.setEnabled(True)
-                self.ui.actionSpectre.setEnabled(True)
-                self.ui.actionAnalysis.setEnabled(True)
+                if not self.ui.actionHeader.isEnabled():
+                    self.ui.actionHeader.setEnabled(True)
+                    self.ui.actionSpectrum.setEnabled(True)
+                    self.ui.actionAnalysis.setEnabled(True)
+
+                # TODO: insert recent files, think about how save them
+                # self.ui.menu_recent.addSeparator()
+                # self.ui.menu_recent.addAction(self.path)
+
+                if not self.ui.actionClear.isEnabled():
+                    self.ui.actionClear.setEnabled(True)
 
     def get_header(self):
         self.info = FrameHeader(self.wav_info)
+
+    def plot_spectrum(self):
+        self.spectrum = FrameSpectrum(self.path)
 
 
 if __name__ == '__main__':

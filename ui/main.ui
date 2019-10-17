@@ -40,8 +40,22 @@
     <property name="title">
      <string>Файл</string>
     </property>
+    <widget class="QMenu" name="menu_recent">
+     <property name="geometry">
+      <rect>
+       <x>487</x>
+       <y>306</y>
+       <width>183</width>
+       <height>72</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Недавние файлы</string>
+     </property>
+     <addaction name="actionClear"/>
+    </widget>
     <addaction name="actionOpen"/>
-    <addaction name="actionRecent"/>
+    <addaction name="menu_recent"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -50,7 +64,7 @@
      <string>Анализ</string>
     </property>
     <addaction name="actionHeader"/>
-    <addaction name="actionSpectre"/>
+    <addaction name="actionSpectrum"/>
     <addaction name="separator"/>
     <addaction name="actionAnalysis"/>
    </widget>
@@ -86,11 +100,6 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionRecent">
-   <property name="text">
-    <string>Недавние</string>
-   </property>
-  </action>
   <action name="actionExit">
    <property name="text">
     <string>Выход</string>
@@ -119,7 +128,7 @@
     <string>Данные из заголовка</string>
    </property>
   </action>
-  <action name="actionSpectre">
+  <action name="actionSpectrum">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -147,6 +156,14 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Очистить</string>
    </property>
   </action>
  </widget>
