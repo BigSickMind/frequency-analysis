@@ -99,7 +99,8 @@ class Ui_FrameDefault(object):
         self.actionHelp.setShortcut(_translate("FrameDefault", "F1"))
         self.actionClear.setText(_translate("FrameDefault", "Очистить"))
 
-    def renameWindowTitle(self, FrameDefault, path=""):
+    @staticmethod
+    def renameWindowTitle(FrameDefault, path=""):
         if not path:
             title = "Частотный анализатор"
         else:
