@@ -1,9 +1,9 @@
 import struct
 
-from frames.header import Ui_FrameHeader
-
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+
+from frames.header import Ui_FrameHeader
 
 INVALID_FORMAT = "Некорректный формат файла."
 CORRUPT = "Не удаётся открыть файл. Возможно он повреждён."
@@ -16,7 +16,7 @@ FORMAT = {
     4: "Гбайт"
 }
 
-DELETIONS = (8, 1024, 1024, 1024, 1024, )
+DELETIONS = (8, 1024, 1024, 1024, 1024,)
 
 
 class FrameHeader(QWidget):

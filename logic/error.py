@@ -1,8 +1,8 @@
 import sys
 
-from frames.error import Ui_FrameError
-
 from PyQt5.QtWidgets import *
+
+from frames.error import Ui_FrameError
 
 
 class FrameError(QWidget):
