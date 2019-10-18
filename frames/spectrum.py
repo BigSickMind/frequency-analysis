@@ -5,11 +5,13 @@ class Ui_FrameSpectrum(object):
     def setupUi(self, FrameSpectrum):
         FrameSpectrum.setObjectName("FrameSpectrum")
         FrameSpectrum.setWindowModality(QtCore.Qt.ApplicationModal)
-        FrameSpectrum.resize(650, 450)
-        FrameSpectrum.setMinimumSize(QtCore.QSize(650, 450))
+        FrameSpectrum.resize(800, 600)
+        FrameSpectrum.setMinimumSize(QtCore.QSize(600, 600))
+
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../icons/spectrum.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameSpectrum.setWindowIcon(icon)
+
         self.imageLayout = QtWidgets.QVBoxLayout(FrameSpectrum)
         self.imageLayout.setObjectName("imageLayout")
         self.imageWidget = QtWidgets.QWidget(FrameSpectrum)

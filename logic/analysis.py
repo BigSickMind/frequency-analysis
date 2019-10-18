@@ -76,46 +76,6 @@ def gssnr_analysis(gssnr_blocks):
         return False
 
 
-def build_plots(self):
-    sample_rate, wave_data = wavfile.read(self.path)
-
-    channel1 = wave_data[:, 0]
-    channel2 = wave_data[:, 1]
-    time = np.arange(0, float(wave_data.shape[0] / sample_rate), 1 / sample_rate)
-
-    plt.figure(figsize=(8, 7))
-    plt.subplot(211).set_title('Левый канал')
-    plt.plot(time, channel1)
-    plt.ylabel('Амлитуда (метры)')
-    plt.subplot(212).set_title('Правый канал')
-    plt.plot(time, channel2)
-    plt.xlabel('Время (сек)')
-    plt.ylabel('Амлитуда (метры)')
-    plt.savefig('wave.png')
-    pixmap_wave = QPixmap('wave.png')
-
-    self.ui.wave_image.setPixmap(pixmap_wave)
-    self.resize(pixmap_wave.width(), pixmap_wave.height())
-
-    fft_data = abs(fft(channel1))
-    n = len(channel1)
-    fft_data = fft_data[0:(n // 2)]
-    fft_data = fft_data / float(n)
-    freqArray = np.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
-    db = 10 * np.log10(fft_data)
-
-    plt.figure(figsize=(8, 7))
-    plt.plot(freqArray, db)
-    plt.xlabel('Частота (Гц)')
-    plt.ylabel('Мощность (дБ)')
-    plt.savefig('fft.png')
-    pixmap_fft = QPixmap('fft.png')
-
-    self.ui.fft_image.setPixmap(pixmap_fft)
-    self.resize(pixmap_fft.width(), pixmap_fft.height())
-    return freqArray, db
-
-
 def signal_noise_not_equal(self, freqArray, db, GSSNR1):
     from statistics import mean
 
