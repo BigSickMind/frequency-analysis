@@ -1,2 +1,5 @@
 .idea/
+.logic/old/
+.logic.watermark/
+.tests/
 commands.txt
