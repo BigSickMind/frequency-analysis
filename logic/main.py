@@ -18,6 +18,7 @@ from logic.error import FrameError
 from logic.header import FrameHeader, get_header
 from logic.spectrogram import FrameSpectrogram
 from logic.spectrum import FrameSpectrum
+from logic.analysis import FrameAnalysis
 
 
 # TODO: check message.wav. Seems that it's normal, but program crashes
@@ -139,7 +140,7 @@ class Main(QMainWindow):
         self.spectrum = FrameSpectrum(self.wave_data[:, 0], self.sample_rate)
 
     def frequency_analysis(self):
-        pass
+        self.analysis = FrameAnalysis(self.wave_data[:, 0], self.sample_rate)
 
     def help(self):
         pass
