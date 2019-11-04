@@ -19,6 +19,7 @@ from logic.header import FrameHeader, get_header
 from logic.spectrogram import FrameSpectrogram
 from logic.spectrum import FrameSpectrum
 from logic.analysis import FrameAnalysis
+from logic.about import FrameAbout
 
 
 # TODO: check message.wav. Seems that it's normal, but program crashes
@@ -36,6 +37,7 @@ class Main(QMainWindow):
 
         # TODO: spectrogram and spectrum plot - different things?
         #  spectrum plot - frequency/db, spectrogram - time/frequency?
+        #  I think i understand
         self.ui.actionSpectrogram.triggered.connect(self.plot_spectrogram)
         self.ui.actionSpectrum.triggered.connect(self.plot_spectrum)
         self.ui.actionAnalysis.triggered.connect(self.frequency_analysis)
@@ -146,7 +148,7 @@ class Main(QMainWindow):
         pass
 
     def about(self):
-        pass
+        self.about = FrameAbout()
 
 
 if __name__ == '__main__':
