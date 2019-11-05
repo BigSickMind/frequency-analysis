@@ -4,6 +4,7 @@ import numpy
 
 import scipy.io.wavfile as wavfile
 
+import matplotlib
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg as FigureCanvas,
@@ -30,6 +31,8 @@ class Main(QMainWindow):
         self.ui = Ui_FrameDefault()
         self.FrameDefault = self.ui.setupUi(self)
 
+        self.last_path = ''
+
         self.ui.actionOpen.triggered.connect(self.open_file)
         self.ui.actionExit.triggered.connect(self.exit)
 
@@ -51,15 +54,32 @@ class Main(QMainWindow):
     def exit():
         sys.exit()
 
-    def build_waveform(self):
-        # TODO: refactor this shit
-        #  Set picture size like window
+    def print_error(self):
+        self.error = FrameError(self.message)
 
-        # TODO: on little screens
-        figure = pyplot.figure(figsize=(20, 20))
+        self.ui.renameWindowTitle(self.FrameDefault)
 
-        self.sample_rate, self.wave_data = wavfile.read(self.path)
+        if self.ui.actionHeader.isEnabled():
+            self.ui.actionHeader.setDisabled(True)
+            self.ui.actionSpectrogram.setDisabled(True)
+            self.ui.actionSpectrum.setDisabled(True)
+            self.ui.actionAnalysis.setDisabled(True)
 
+    def build_mono(self, figure, time):
+        channel = self.wave_data
+
+        # TODO: normalize amplitude values or not?
+        channel = numpy.divide(channel, max(channel))
+
+        axes = figure.add_subplot(111)
+        axes.set_title('Канал')
+        axes.set_xlabel('Время (сек)')
+        axes.set_ylabel('Амлитуда (метры)')
+        axes.plot(time, channel)
+
+        return figure
+
+    def build_stereo(self, figure, time):
         channel1 = self.wave_data[:, 0]
         channel2 = self.wave_data[:, 1]
 
@@ -67,45 +87,63 @@ class Main(QMainWindow):
         channel1 = numpy.divide(channel1, max(channel1))
         channel2 = numpy.divide(channel2, max(channel2))
 
-        time = numpy.arange(0, float(self.wave_data.shape[0] / self.sample_rate), 1 / self.sample_rate)
-
         # TODO: think about mono channel
 
         # TODO: scrollable image?
-        axes_left = figure.add_subplot(411)
+        axes_left = figure.add_subplot(311)
         axes_left.set_title('Левый канал')
         axes_left.set_xlabel('Время (сек)')
         axes_left.set_ylabel('Амлитуда (метры)')
         axes_left.plot(time, channel1)
 
-        axes_right = figure.add_subplot(413)
+        axes_right = figure.add_subplot(313)
         axes_right.set_title('Правый канал')
         axes_right.set_xlabel('Время (сек)')
         axes_right.set_ylabel('Амлитуда (метры)')
         axes_right.plot(time, channel2)
 
-        self.canvas = FigureCanvas(figure)
-        self.ui.imageLayout.addWidget(self.canvas)
-        self.canvas.draw()
+        return figure
 
-        # self.scroll = QScrollBar(Qt.Horizontal)
-        # self.ui.imageLayout.addWidget(self.scroll)
+    def build_waveform(self):
+        # TODO: refactor this shit
+        #  Set picture size like window
 
-        self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
-        self.ui.imageLayout.addWidget(self.toolbar)
+        # TODO: on little screens
+        figure = pyplot.figure(figsize=(20, 20))
+
+        # TODO: fix problems?
+        matplotlib.rcParams['agg.path.chunksize'] = 10000
+
+        self.sample_rate, self.wave_data = wavfile.read(self.path)
+
+        time = numpy.arange(0, float(self.wave_data.shape[0] / self.sample_rate), 1 / self.sample_rate)
+
+        if self.NumChannels > 2:
+            self.print_error()
+        else:
+            if self.NumChannels == 1:
+                self.build_mono(figure, time)
+            elif self.NumChannels == 2:
+                self.build_stereo(figure, time)
+
+            self.canvas = FigureCanvas(figure)
+            self.ui.imageLayout.addWidget(self.canvas)
+            self.canvas.draw()
+
+            # self.scroll = QScrollBar(Qt.Horizontal)
+            # self.ui.imageLayout.addWidget(self.scroll)
+
+            self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
+            self.ui.imageLayout.addWidget(self.toolbar)
 
     def set_main_window(self):
         if not self.wav_info:
-            self.error = FrameError(self.message)
+            self.last_path = ''
 
-            self.ui.renameWindowTitle(self.FrameDefault)
-
-            if self.ui.actionHeader.isEnabled():
-                self.ui.actionHeader.setDisabled(True)
-                self.ui.actionSpectrogram.setDisabled(True)
-                self.ui.actionSpectrum.setDisabled(True)
-                self.ui.actionAnalysis.setDisabled(True)
+            self.print_error()
         else:
+            self.last_path = self.path
+
             self.ui.renameWindowTitle(self.FrameDefault, self.path)
 
             if not self.ui.actionHeader.isEnabled():
@@ -125,10 +163,13 @@ class Main(QMainWindow):
         self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
                                                    "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
                                                    options=options)
-        if self.path:
+        if self.path and self.last_path != self.path:
+            for i in reversed(range(self.ui.imageLayout.count())):
+                self.ui.imageLayout.itemAt(i).widget().setParent(None)
+
             self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
 
-            self.wav_info, self.message = get_header(self.path, self.filename)
+            self.wav_info, self.message, self.NumChannels = get_header(self.path, self.filename)
 
             self.set_main_window()
 

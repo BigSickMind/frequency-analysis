@@ -2,4 +2,5 @@
 logic/old/
 logic/watermark/
 tests/
+formats/script.py
 commands.txt

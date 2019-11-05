@@ -10,19 +10,19 @@
     <x>0</x>
     <y>0</y>
     <width>585</width>
-    <height>525</height>
+    <height>540</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>585</width>
-    <height>525</height>
+    <height>540</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>585</width>
-    <height>525</height>
+    <height>540</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,7 @@
      <x>80</x>
      <y>40</y>
      <width>431</width>
-     <height>422</height>
+     <height>451</height>
     </rect>
    </property>
    <property name="font">
@@ -76,6 +76,11 @@
     </property>
     <property name="textAlignment">
      <set>AlignLeading|AlignVCenter</set>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Длительность</string>
     </property>
    </row>
    <row>
@@ -170,7 +175,7 @@
    <property name="geometry">
     <rect>
      <x>480</x>
-     <y>480</y>
+     <y>500</y>
      <width>91</width>
      <height>31</height>
     </rect>
