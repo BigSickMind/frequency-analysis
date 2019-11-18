@@ -2,10 +2,17 @@ import sys
 
 import numpy
 
-import wave
+# TODO: some wav files are opened with errors of unreadable bytes
 import scipy.io.wavfile as wavfile
+
+# TODO: main library
 import wavio
 
+# TODO: useless
+import wave
+
+# TODO: good library for another formats (except MP3)
+import soundfile
 
 import matplotlib
 from matplotlib import pyplot
@@ -14,6 +21,7 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar)
 
 from PyQt5.QtWidgets import *
+from PyQt5 import QtGui
 
 from src.frames.main import Ui_FrameDefault
 
@@ -74,6 +82,8 @@ class Main(QMainWindow):
 
         # self.wave.readframes(self.wave.getnframes())
 
+        # channel = self.data
+
         # TODO: normalize amplitude values or not?
         channel = numpy.divide(channel, max(channel))
 
@@ -94,11 +104,12 @@ class Main(QMainWindow):
 
         # self.wave.readframes(self.wave.getnframes())
 
+        # channel1 = self.data[:, 0]
+        # channel2 = self.data[:, 1]
+
         # TODO: normalize amplitude values or not?
         channel1 = numpy.divide(channel1, max(channel1))
         channel2 = numpy.divide(channel2, max(channel2))
-
-        # TODO: think about mono channel
 
         # TODO: scrollable image?
         axes_left = figure.add_subplot(311)
@@ -128,10 +139,15 @@ class Main(QMainWindow):
         # self.sample_rate, self.wave_data = wavfile.read(self.path)
         self.wave = wavio.read(path)
         # self.wave = wave.open(path, 'r')
+        # self.data, self.rate = soundfile.read(path)
+
+        # print(1)
+        # exit()
 
         # time = numpy.arange(0, float(self.wave_data.shape[0] / self.sample_rate), 1 / self.sample_rate)
         time = numpy.arange(0, float(self.wave.data.shape[0] / self.wave.rate), 1 / self.wave.rate)
         # time = numpy.arange(0, float(self.wave.getnframes() / self.wave.getframerate()), 1 / self.wave.getframerate())
+        # time = numpy.arange(0, float(self.data.shape[0] / self.rate), 1 / self.rate)
 
         if NumChannels > 2:
             self.print_error(message)
@@ -195,13 +211,19 @@ class Main(QMainWindow):
         self.info = FrameHeader(self.wav_info)
 
     def plot_spectrogram(self):
-        self.spectrogram = FrameSpectrogram(self.sample_rate, self.wave_data)
+        # self.spectrogram = FrameSpectrogram(self.wave_data, self.sample_rate)
+        self.spectrogram = FrameSpectrogram(self.wave.data, self.wave.rate)
+        # self.spectrogram = FrameSpectrogram(self.data, self.rate)
 
     def plot_spectrum(self):
-        self.spectrum = FrameSpectrum(self.wave_data[:, 0], self.sample_rate)
+        # self.spectrum = FrameSpectrum(self.wave_data[:, 0], self.sample_rate)
+        self.spectrum = FrameSpectrum(self.wave.data[:, 0], self.wave.rate)
+        # self.spectrum = FrameSpectrum(self.data[:, 0], self.rate)
 
     def frequency_analysis(self):
-        self.analysis = FrameAnalysis(self.wave_data[:, 0], self.sample_rate)
+        # self.analysis = FrameAnalysis(self.wave_data[:, 0], self.sample_rate)
+        self.analysis = FrameAnalysis(self.wave.data[:, 0], self.wave.rate)
+        # self.analysis = FrameAnalysis(self.data[:, 0], self.rate)
 
     def help(self):
         pass

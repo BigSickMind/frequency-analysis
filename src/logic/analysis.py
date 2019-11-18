@@ -7,6 +7,11 @@ from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 
+from statistics import mean
+from math import sqrt
+
+from time import time
+
 from PyQt5.QtWidgets import *
 
 from src.frames.analysis import Ui_FrameAnalysis
@@ -53,23 +58,27 @@ class FrameAnalysis(QWidget):
 
     @staticmethod
     def signal_noise(freqArray, db):
-        from statistics import mean
+        # TODO: TEST
+        start_time = time()
 
         start = 0
         new_db = []
         all_sigma = []
         all_mean = []
+
         for i in range(len(freqArray)):
             if freqArray[i] - freqArray[start] <= 100.0:
                 new_db.append(db[i])
             else:
+                # TODO: TEST
+                print(i)
+
                 mean_new_db = mean(new_db)
                 sum1 = 0
                 sum2 = 0
                 for j in range(len(new_db)):
                     sum1 += new_db[j] ** 2
                     sum2 += new_db[j]
-                from math import sqrt
                 sigma_b = sqrt(sum1 / len(new_db) - (sum2 / len(new_db)) ** 2)
                 all_sigma.append(sigma_b)
                 all_mean.append(mean_new_db)
@@ -83,7 +92,6 @@ class FrameAnalysis(QWidget):
             for j in range(len(new_db)):
                 sum1 += new_db[j] ** 2
                 sum2 += new_db[j]
-            from math import sqrt
             sigma_b = sqrt(sum1 / len(new_db) - (sum2 / len(new_db)) ** 2)
             all_sigma.append(sigma_b)
             all_mean.append(mean_new_db)
@@ -94,10 +102,14 @@ class FrameAnalysis(QWidget):
             sum1 += all_sigma[j] ** 2
             sum2 += (all_sigma[j] - all_mean[j]) ** 2
         GSSNR = sum1 / sum2
+
+        print(time() - start_time)
+
         return GSSNR
 
     def signal_noise_not_equal(self, freqArray, db, GSSNR):
-        from statistics import mean
+        # TODO: TEST
+        start_time = time()
 
         start = 0
         k = 1
@@ -106,10 +118,15 @@ class FrameAnalysis(QWidget):
         all_mean_sigma = []
         x = []
         all_GSSNR_blocks = []
+
         for i in range(len(freqArray)):
-            if freqArray[i] - freqArray[start] <= 100.0 * k:
+            # TODO: 100 Hz, too slow
+            if freqArray[i] - freqArray[start] <= 200.0 * k:
                 new_db.append(db[i])
             else:
+                # TODO: TEST
+                print(i)
+
                 n = len(new_db) // (10 * k)
                 st = 0
                 while st < len(new_db):
@@ -125,7 +142,6 @@ class FrameAnalysis(QWidget):
                     for j in range(len(new_new_db)):
                         sum1 += new_new_db[j] ** 2
                         sum2 += new_new_db[j]
-                    from math import sqrt
                     sigma_b = sqrt(sum1 / len(new_new_db) - (sum2 / len(new_new_db)) ** 2)
                     all_sigma.append(sigma_b)
                     all_mean_sigma.append(mean_new_new_db)
@@ -156,7 +172,6 @@ class FrameAnalysis(QWidget):
                 for j in range(len(new_new_db)):
                     sum1 += new_new_db[j] ** 2
                     sum2 += new_new_db[j]
-                from math import sqrt
                 sigma_b = sqrt(sum1 / len(new_new_db) - (sum2 / len(new_new_db)) ** 2)
                 all_sigma.append(sigma_b)
                 all_mean_sigma.append(mean_new_new_db)
@@ -171,6 +186,8 @@ class FrameAnalysis(QWidget):
             all_GSSNR_blocks.append(GSSNR_blocks)
 
             x.append(freqArray[len(freqArray) - 1])
+
+        print(time() - start_time)
 
         for i in range(6, len(x)):
             if i == 6:
