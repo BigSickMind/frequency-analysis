@@ -2,7 +2,10 @@ import sys
 
 import numpy
 
+import wave
 import scipy.io.wavfile as wavfile
+import wavio
+
 
 import matplotlib
 from matplotlib import pyplot
@@ -11,16 +14,15 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar)
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
 
-from frames.main import Ui_FrameDefault
+from src.frames.main import Ui_FrameDefault
 
-from logic.error import FrameError
-from logic.header import FrameHeader, get_header
-from logic.spectrogram import FrameSpectrogram
-from logic.spectrum import FrameSpectrum
-from logic.analysis import FrameAnalysis
-from logic.about import FrameAbout
+from src.logic.error import FrameError
+from src.logic.header import FrameHeader, get_header
+from src.logic.spectrogram import FrameSpectrogram
+from src.logic.spectrum import FrameSpectrum
+from src.logic.analysis import FrameAnalysis
+from src.logic.about import FrameAbout
 
 
 # TODO: check message.wav. Seems that it's normal, but program crashes
@@ -54,8 +56,8 @@ class Main(QMainWindow):
     def exit():
         sys.exit()
 
-    def print_error(self):
-        self.error = FrameError(self.message)
+    def print_error(self, message):
+        self.error = FrameError(message)
 
         self.ui.renameWindowTitle(self.FrameDefault)
 
@@ -66,7 +68,11 @@ class Main(QMainWindow):
             self.ui.actionAnalysis.setDisabled(True)
 
     def build_mono(self, figure, time):
-        channel = self.wave_data
+        # channel = self.wave_data
+
+        channel = self.wave.data
+
+        # self.wave.readframes(self.wave.getnframes())
 
         # TODO: normalize amplitude values or not?
         channel = numpy.divide(channel, max(channel))
@@ -80,8 +86,13 @@ class Main(QMainWindow):
         return figure
 
     def build_stereo(self, figure, time):
-        channel1 = self.wave_data[:, 0]
-        channel2 = self.wave_data[:, 1]
+        # channel1 = self.wave_data[:, 0]
+        # channel2 = self.wave_data[:, 1]
+
+        channel1 = self.wave.data[:, 0]
+        channel2 = self.wave.data[:, 1]
+
+        # self.wave.readframes(self.wave.getnframes())
 
         # TODO: normalize amplitude values or not?
         channel1 = numpy.divide(channel1, max(channel1))
@@ -104,7 +115,7 @@ class Main(QMainWindow):
 
         return figure
 
-    def build_waveform(self):
+    def build_waveform(self, path, message, NumChannels):
         # TODO: refactor this shit
         #  Set picture size like window
 
@@ -114,16 +125,20 @@ class Main(QMainWindow):
         # TODO: fix problems?
         matplotlib.rcParams['agg.path.chunksize'] = 10000
 
-        self.sample_rate, self.wave_data = wavfile.read(self.path)
+        # self.sample_rate, self.wave_data = wavfile.read(self.path)
+        self.wave = wavio.read(path)
+        # self.wave = wave.open(path, 'r')
 
-        time = numpy.arange(0, float(self.wave_data.shape[0] / self.sample_rate), 1 / self.sample_rate)
+        # time = numpy.arange(0, float(self.wave_data.shape[0] / self.sample_rate), 1 / self.sample_rate)
+        time = numpy.arange(0, float(self.wave.data.shape[0] / self.wave.rate), 1 / self.wave.rate)
+        # time = numpy.arange(0, float(self.wave.getnframes() / self.wave.getframerate()), 1 / self.wave.getframerate())
 
-        if self.NumChannels > 2:
-            self.print_error()
+        if NumChannels > 2:
+            self.print_error(message)
         else:
-            if self.NumChannels == 1:
+            if NumChannels == 1:
                 self.build_mono(figure, time)
-            elif self.NumChannels == 2:
+            elif NumChannels == 2:
                 self.build_stereo(figure, time)
 
             self.canvas = FigureCanvas(figure)
@@ -136,15 +151,15 @@ class Main(QMainWindow):
             self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
             self.ui.imageLayout.addWidget(self.toolbar)
 
-    def set_main_window(self):
+    def set_main_window(self, path, message, NumChannels):
         if not self.wav_info:
             self.last_path = ''
 
-            self.print_error()
+            self.print_error(message)
         else:
-            self.last_path = self.path
+            self.last_path = path
 
-            self.ui.renameWindowTitle(self.FrameDefault, self.path)
+            self.ui.renameWindowTitle(self.FrameDefault, path)
 
             if not self.ui.actionHeader.isEnabled():
                 self.ui.actionHeader.setEnabled(True)
@@ -152,26 +167,29 @@ class Main(QMainWindow):
                 self.ui.actionSpectrum.setEnabled(True)
                 self.ui.actionAnalysis.setEnabled(True)
 
-            self.build_waveform()
+            self.build_waveform(path, message, NumChannels)
 
     # TODO: test normal files 2-3 min
     def open_file(self):
+
         options = QFileDialog.Options()
         # TODO: default directory?
-        directory = "D:/Github/frequency-analysis/tests/test/"
+        directory = "D:/Github/frequency-analysis/src/tests/test/"
         # directory = ""
-        self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
-                                                   "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
-                                                   options=options)
-        if self.path and self.last_path != self.path:
+
+        # self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
+        path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
+                                              "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
+                                              options=options)
+        if path and self.last_path != path:
             for i in reversed(range(self.ui.imageLayout.count())):
                 self.ui.imageLayout.itemAt(i).widget().setParent(None)
 
-            self.filename = self.path[(self.path.rfind('/') + 1):self.path.rfind('.')]
+            filename = path[(path.rfind('/') + 1):path.rfind('.')]
 
-            self.wav_info, self.message, self.NumChannels = get_header(self.path, self.filename)
+            self.wav_info, message, NumChannels = get_header(path, filename)
 
-            self.set_main_window()
+            self.set_main_window(path, message, NumChannels)
 
     def get_header(self):
         self.info = FrameHeader(self.wav_info)

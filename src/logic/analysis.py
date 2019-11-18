@@ -7,10 +7,9 @@ from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import *
 
-from frames.analysis import Ui_FrameAnalysis
+from src.frames.analysis import Ui_FrameAnalysis
 
 
 class FrameAnalysis(QWidget):

@@ -1,6 +1,6 @@
 .idea/
-logic/old/
-logic/watermark/
-tests/
-formats/script.py
+src/logic/old/
+src/logic/watermark/
+src/tests/
+src/formats/script.py
 commands.txt

@@ -9,7 +9,7 @@ from matplotlib.backends.backend_qt5agg import (
 
 from PyQt5.QtWidgets import *
 
-from frames.spectrum import Ui_FrameSpectrum
+from src.frames.spectrum import Ui_FrameSpectrum
 
 
 class FrameSpectrum(QWidget):

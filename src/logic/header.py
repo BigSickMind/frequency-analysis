@@ -4,9 +4,9 @@ from datetime import time
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-from frames.header import Ui_FrameHeader
+from src.frames.header import Ui_FrameHeader
 
-from formats.wav_formats import get_AudioFormat
+from src.formats.wav_formats import get_AudioFormat
 
 INVALID_FORMAT = "Некорректный формат файла."
 CORRUPT = "Не удаётся открыть файл. Возможно он повреждён."
@@ -84,9 +84,24 @@ def get_header(path, filename):
     if Format != 'WAVE':
         return wav_info, CORRUPT, 0
 
-    Subchunk1ID = str(file.read(4), encoding="utf-8")
+    Subchunk1ID = ''
+    while True:
+        try:
+            fmt = str(file.read(2), encoding="utf-8")
+            if fmt == 'fm':
+                fmt = str(file.read(2), encoding="utf-8")
+                if fmt == 't ':
+                    Subchunk1ID = 'fmt '
+                break
+        except:
+            continue
+
     if Subchunk1ID != 'fmt ':
         return wav_info, CORRUPT, 0
+
+    # Subchunk1ID = str(file.read(4), encoding="utf-8")
+    # if Subchunk1ID != 'fmt ':
+    #     return wav_info, CORRUPT, 0
 
     Subchunk1Size = struct.unpack("I", file.read(4))[0]
     AudioFormat = struct.unpack("H", file.read(2))[0]
@@ -100,15 +115,22 @@ def get_header(path, filename):
 
     Subchunk2ID = ''
     while True:
-        data = str(file.read(2), encoding="utf-8")
-        if data == 'da':
+        try:
             data = str(file.read(2), encoding="utf-8")
-            if data == 'ta':
-                Subchunk2ID = 'data'
-            break
+            if data == 'da':
+                data = str(file.read(2), encoding="utf-8")
+                if data == 'ta':
+                    Subchunk2ID = 'data'
+                break
+        except:
+            continue
 
     if Subchunk2ID != 'data':
         return wav_info, CORRUPT, 0
+
+    # Subchunk2ID = str(file.read(4), encoding="utf-8")
+    # if Subchunk1ID != 'data':
+    #     return wav_info, CORRUPT, 0
 
     Subchunk2Size = struct.unpack("I", file.read(4))[0]
 
