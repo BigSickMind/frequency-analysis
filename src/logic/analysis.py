@@ -18,13 +18,13 @@ from src.frames.analysis import Ui_FrameAnalysis
 
 
 class FrameAnalysis(QWidget):
-    def __init__(self, channel, sample_rate):
+    def __init__(self, wave_data, sample_rate):
         super(FrameAnalysis, self).__init__()
 
         self.ui = Ui_FrameAnalysis()
         self.ui.setupUi(self)
 
-        self.plot_analysis(channel, sample_rate)
+        self.analysis(wave_data, sample_rate)
 
         self.show()
 
@@ -36,168 +36,151 @@ class FrameAnalysis(QWidget):
         self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
         self.ui.imageLayout.addWidget(self.toolbar)
 
-    def plot_analysis(self, channel, sample_rate):
-        fft_data = abs(fft(channel))
-        n = len(channel)
-        fft_data = fft_data[0:(n // 2)]
-        fft_data = fft_data / float(n)
-        freqArray = numpy.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
-        db = 10 * numpy.log10(fft_data)
-
+    def plot_analysis(self, freqArray, GSSNR, freqs, GSSNR_blocks):
         figure = pyplot.figure(figsize=(20, 20))
         self.axes = figure.add_subplot(111)
         self.axes.set_xlabel('Частота (Гц)')
         self.axes.set_ylabel('GSSNR')
 
-        # TODO: why is working so long? where is a problem?
-        GSSNR = self.signal_noise(freqArray, db)
-        all_GSSNR_blocks = self.signal_noise_not_equal(freqArray, db, GSSNR)
+        for i in range(6, len(freqs)):
+            if i == 6:
+                self.axes.plot(freqs[i], GSSNR_blocks[i], 'go', label='значения GSSNR')
+            else:
+                self.axes.plot(freqs[i], GSSNR_blocks[i], 'go')
+        self.axes.plot(freqs, GSSNR_blocks, '--b', label='GSSNR интервалов')
+        self.axes.plot(freqArray, [GSSNR] * len(freqArray), 'r', label='GSSNR аудиофайла')
 
         self.axes.legend(loc='upper right')
         self.add_analysis(figure)
 
+    def analysis(self, wave_data, sample_rate):
+        fft_data = abs(fft(wave_data))
+        n = len(wave_data)
+        fft_data = fft_data[0:(n // 2)]
+        fft_data = fft_data / float(n)
+        freqArray = numpy.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
+        db = 10 * numpy.log10(fft_data)
+
+        # TODO: why is working so long? where is a problem?
+        GSSNR = self.get_parameters(freqArray, db)
+
+        # TODO: Here. Twice cycle with raising values
+        freqs, GSSNR_blocks = self.get_interval_parameters(freqArray, db)
+
+        self.plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks)
+
     @staticmethod
-    def signal_noise(freqArray, db):
+    def get_parameters(freqArray, db):
         # TODO: TEST
         start_time = time()
 
         start = 0
-        new_db = []
-        all_sigma = []
-        all_mean = []
+
+        numerator = 0
+        denominator = 0
 
         for i in range(len(freqArray)):
             if freqArray[i] - freqArray[start] <= 100.0:
-                new_db.append(db[i])
+                continue
             else:
                 # TODO: TEST
                 print(i)
 
-                mean_new_db = mean(new_db)
-                sum1 = 0
-                sum2 = 0
-                for j in range(len(new_db)):
-                    sum1 += new_db[j] ** 2
-                    sum2 += new_db[j]
-                sigma_b = sqrt(sum1 / len(new_db) - (sum2 / len(new_db)) ** 2)
-                all_sigma.append(sigma_b)
-                all_mean.append(mean_new_db)
-                start = i
-                new_db = [db[start]]
+                finish = i
+                numerator, denominator = calculate_GSSNR_block(db[start:finish], numerator, denominator)
+                start = finish
 
-        if len(new_db):
-            mean_new_db = mean(new_db)
-            sum1 = 0
-            sum2 = 0
-            for j in range(len(new_db)):
-                sum1 += new_db[j] ** 2
-                sum2 += new_db[j]
-            sigma_b = sqrt(sum1 / len(new_db) - (sum2 / len(new_db)) ** 2)
-            all_sigma.append(sigma_b)
-            all_mean.append(mean_new_db)
+        if start < len(db) - 1:
+            numerator, denominator = calculate_GSSNR_block(db[start:], numerator, denominator)
 
-        sum1 = 0
-        sum2 = 0
-        for j in range(len(all_sigma)):
-            sum1 += all_sigma[j] ** 2
-            sum2 += (all_sigma[j] - all_mean[j]) ** 2
-        GSSNR = sum1 / sum2
+        GSSNR = numerator / denominator
 
-        print(time() - start_time)
+        print('GSSNR GSSNR GSSNR: ', time() - start_time)
 
         return GSSNR
 
-    def signal_noise_not_equal(self, freqArray, db, GSSNR):
+    # TODO: Patent, algorithm
+    @staticmethod
+    def get_interval_parameters(freqArray, db):
         # TODO: TEST
         start_time = time()
 
-        start = 0
+        finish = 0
         k = 1
-        new_db = []
-        all_sigma = []
-        all_mean_sigma = []
-        x = []
-        all_GSSNR_blocks = []
+
+        freqs = []
+        GSSNR_blocks = []
 
         for i in range(len(freqArray)):
             # TODO: 100 Hz, too slow
-            if freqArray[i] - freqArray[start] <= 200.0 * k:
-                new_db.append(db[i])
+            if freqArray[i] - freqArray[0] <= 200.0 * k:
+                continue
             else:
                 # TODO: TEST
                 print(i)
 
-                n = len(new_db) // (10 * k)
-                st = 0
-                while st < len(new_db):
-                    new_new_db = new_db[st:min(st + n, len(new_db))]
-                    st += n
-                    if st + n >= len(new_db):
-                        while st < len(new_db):
-                            new_new_db.append(new_db[st])
-                            st += 1
-                    mean_new_new_db = mean(new_new_db)
-                    sum1 = 0
-                    sum2 = 0
-                    for j in range(len(new_new_db)):
-                        sum1 += new_new_db[j] ** 2
-                        sum2 += new_new_db[j]
-                    sigma_b = sqrt(sum1 / len(new_new_db) - (sum2 / len(new_new_db)) ** 2)
-                    all_sigma.append(sigma_b)
-                    all_mean_sigma.append(mean_new_new_db)
+                finish = i
+                n = finish // (10 * k)
+                idx = 0
 
-                sum1 = 0
-                sum2 = 0
-                for j in range(len(all_sigma)):
-                    sum1 += all_sigma[j] ** 2
-                    sum2 += (all_sigma[j] - all_mean_sigma[j]) ** 2
-                GSSNR_blocks = sum1 / sum2
-                all_GSSNR_blocks.append(GSSNR_blocks)
-                x.append(freqArray[i])
+                numerator = 0
+                denominator = 0
+
+                while idx < finish:
+                    db_cut = db[idx:min(idx + n, finish)]
+                    idx += n
+
+                    if idx < finish <= idx + n and finish - idx < n // 2:
+                        db_cut = db[(idx - n):finish]
+                        idx = finish
+
+                    numerator, denominator = calculate_GSSNR_block(db_cut, numerator, denominator)
+
+                GSSNR_block = numerator / denominator
+                GSSNR_blocks.append(GSSNR_block)
+                freqs.append(freqArray[i])
                 k += 1
 
-        if len(new_db):
-            n = len(new_db) // (10 * k)
-            st = 0
-            while st < len(new_db):
-                new_new_db = new_db[st:min(st + n, len(new_db))]
-                st += n
-                if st + n >= len(new_db):
-                    while st < len(new_db):
-                        new_new_db.append(new_db[st])
-                        st += 1
-                mean_new_new_db = mean(new_new_db)
-                sum1 = 0
-                sum2 = 0
-                for j in range(len(new_new_db)):
-                    sum1 += new_new_db[j] ** 2
-                    sum2 += new_new_db[j]
-                sigma_b = sqrt(sum1 / len(new_new_db) - (sum2 / len(new_new_db)) ** 2)
-                all_sigma.append(sigma_b)
-                all_mean_sigma.append(mean_new_new_db)
-                st += n
+        if finish < len(freqArray) - 1:
+            n = finish // (10 * k)
+            idx = 0
 
-            sum1 = 0
-            sum2 = 0
-            for j in range(len(all_sigma)):
-                sum1 += all_sigma[j] ** 2
-                sum2 += (all_sigma[j] - all_mean_sigma[j]) ** 2
-            GSSNR_blocks = sum1 / sum2
-            all_GSSNR_blocks.append(GSSNR_blocks)
+            numerator = 0
+            denominator = 0
 
-            x.append(freqArray[len(freqArray) - 1])
+            while idx < finish:
+                db_cut = db[idx:min(idx + n, finish)]
+                idx += n
 
-        print(time() - start_time)
+                if idx < finish <= idx + n and finish - idx < n // 2:
+                    db_cut = db[(idx - n):finish]
+                    idx = finish
 
-        for i in range(6, len(x)):
-            if i == 6:
-                self.axes.plot(x[i], all_GSSNR_blocks[i], 'go', label='значения GSSNR')
-            else:
-                self.axes.plot(x[i], all_GSSNR_blocks[i], 'go')
-        self.axes.plot(x, all_GSSNR_blocks, '--b', label='GSSNR интервалов')
-        self.axes.plot(freqArray, [GSSNR] * len(freqArray), 'r', label='GSSNR аудиофайла')
+                numerator, denominator = calculate_GSSNR_block(db_cut, numerator, denominator)
 
-        return all_GSSNR_blocks
+            GSSNR_block = numerator / denominator
+            GSSNR_blocks.append(GSSNR_block)
+            freqs.append(freqArray[len(freqArray) - 1])
+
+        print('GSSNR INTERVAL GSSNR INTERVAL: ', time() - start_time)
+
+        return freqs, GSSNR_blocks
+
+
+def calculate_GSSNR_block(db, numerator, denominator):
+    sum1 = 0
+    sum2 = 0
+    for j in range(len(db)):
+        sum1 += db[j] ** 2
+        sum2 += db[j]
+
+    mean_db_hundred = mean(db)
+    sigma_b = sqrt(sum1 / len(db) - (sum2 / len(db)) ** 2)
+
+    numerator += sigma_b ** 2
+    denominator += (sigma_b - mean_db_hundred) ** 2
+
+    return numerator, denominator
 
 # TODO: shitted shit of shit
 # def gssnr_analysis(gssnr_blocks):
@@ -222,10 +205,9 @@ class FrameAnalysis(QWidget):
 #     else:
 #         return False
 
-# TODO: shitted shit of shit
 # def frequency_analysing(self):
-#     GSSNR = signal_noise(freqArray, db)
-#     gssnr_blocks = self.signal_noise_not_equal(freqArray, db, GSSNR)
+#     GSSNR = get_parameters(freqArray, db)
+#     gssnr_blocks = self.get_interval_parameters(freqArray, db, GSSNR)
 # 
 #     if self.gssnr_analysis(gssnr_blocks):
 #         self.ui.parameters_text.append(

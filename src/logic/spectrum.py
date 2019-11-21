@@ -13,13 +13,13 @@ from src.frames.spectrum import Ui_FrameSpectrum
 
 
 class FrameSpectrum(QWidget):
-    def __init__(self, channel, sample_rate):
+    def __init__(self, wave_data, sample_rate):
         super(FrameSpectrum, self).__init__()
 
         self.ui = Ui_FrameSpectrum()
         self.ui.setupUi(self)
 
-        self.plot_spectrum(channel, sample_rate)
+        self.plot_spectrum(wave_data, sample_rate)
 
         self.show()
 
@@ -31,11 +31,11 @@ class FrameSpectrum(QWidget):
         self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
         self.ui.imageLayout.addWidget(self.toolbar)
 
-    def plot_spectrum(self, channel, sample_rate):
+    def plot_spectrum(self, wave_data, sample_rate):
         # TODO: refactor this shit
         
-        fft_data = abs(fft(channel))
-        n = len(channel)
+        fft_data = abs(fft(wave_data))
+        n = len(wave_data)
         fft_data = fft_data[0:(n // 2)]
         fft_data = fft_data / float(n)
         freqArray = numpy.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
@@ -46,5 +46,7 @@ class FrameSpectrum(QWidget):
         axes.set_xlabel('Частота (Гц)')
         axes.set_ylabel('Мощность (дБ)')
         axes.plot(freqArray, db)
+
+        # axes.magnitude_spectrum(wave_data, Fs=sample_rate, scale='dB', )
 
         self.add_spectrum(figure)

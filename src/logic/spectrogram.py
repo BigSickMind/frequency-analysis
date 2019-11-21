@@ -6,7 +6,6 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar)
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
 
 from src.frames.spectrogram import Ui_FrameSpectrogram
 
@@ -14,7 +13,6 @@ from src.frames.spectrogram import Ui_FrameSpectrogram
 class FrameSpectrogram(QWidget):
     def __init__(self, wave_data, sample_rate):
         super(FrameSpectrogram, self).__init__()
-        # self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameSpectrogram()
         self.ui.setupUi(self)
@@ -45,7 +43,8 @@ class FrameSpectrogram(QWidget):
         axes = figure.add_subplot(111)
         axes.set_xlabel('Время (сек)')
         axes.set_ylabel('Частота (Гц)')
-        axes.specgram(wave_data, NFFT=window_size, noverlap=window_size - window_step, Fs=sample_rate)
+        _, _, _, im = axes.specgram(wave_data, NFFT=window_size, noverlap=window_size - window_step, Fs=sample_rate)
+        figure.colorbar(im).set_label('Мощность (дБ)')
 
         self.add_spectrogram(figure)
 
