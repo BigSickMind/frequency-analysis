@@ -26,10 +26,12 @@ from PyQt5 import QtGui
 from src.frames.main import Ui_FrameDefault
 
 from src.logic.error import FrameError
+
 from src.logic.header import FrameHeader, get_header
 from src.logic.spectrogram import FrameSpectrogram
 from src.logic.spectrum import FrameSpectrum
 from src.logic.analysis import FrameAnalysis
+
 from src.logic.about import FrameAbout
 
 

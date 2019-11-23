@@ -9,12 +9,15 @@ from matplotlib.backends.backend_qt5agg import (
 
 from statistics import mean
 from math import sqrt
+from math import log10 as lg
 
 from time import time
 
 from PyQt5.QtWidgets import *
 
 from src.frames.analysis import Ui_FrameAnalysis
+
+from src.logic.waiting import FrameWaiting
 
 
 class FrameAnalysis(QWidget):
@@ -24,34 +27,29 @@ class FrameAnalysis(QWidget):
         self.ui = Ui_FrameAnalysis()
         self.ui.setupUi(self)
 
+        self.ui.buttonOk.clicked.connect(self.ok)
         self.analysis(wave_data, sample_rate)
 
         self.show()
 
-    def add_analysis(self, figure):
-        self.canvas = FigureCanvas(figure)
-        self.ui.imageLayout.addWidget(self.canvas)
-        self.canvas.draw()
+    def ok(self):
+        self.close()
 
-        self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
-        self.ui.imageLayout.addWidget(self.toolbar)
+    def add_analysis_GSSNR(self, figure_GSSNR):
+        canvas = FigureCanvas(figure_GSSNR)
+        self.ui.GSSNRLayout.addWidget(canvas)
+        canvas.draw()
 
-    def plot_analysis(self, freqArray, GSSNR, freqs, GSSNR_blocks):
-        figure = pyplot.figure(figsize=(20, 20))
-        self.axes = figure.add_subplot(111)
-        self.axes.set_xlabel('Частота (Гц)')
-        self.axes.set_ylabel('GSSNR')
+        toolbar = NavigationToolbar(canvas, self.ui.GSSNRWidget, coordinates=True)
+        self.ui.GSSNRLayout.addWidget(toolbar)
 
-        for i in range(6, len(freqs)):
-            if i == 6:
-                self.axes.plot(freqs[i], GSSNR_blocks[i], 'go', label='значения GSSNR')
-            else:
-                self.axes.plot(freqs[i], GSSNR_blocks[i], 'go')
-        self.axes.plot(freqs, GSSNR_blocks, '--b', label='GSSNR интервалов')
-        self.axes.plot(freqArray, [GSSNR] * len(freqArray), 'r', label='GSSNR аудиофайла')
+    def add_analysis_SSNR(self, figure_SSNR):
+        canvas = FigureCanvas(figure_SSNR)
+        self.ui.SSNRLayout.addWidget(canvas)
+        canvas.draw()
 
-        self.axes.legend(loc='upper right')
-        self.add_analysis(figure)
+        toolbar = NavigationToolbar(canvas, self.ui.SSNRWidget, coordinates=True)
+        self.ui.SSNRLayout.addWidget(toolbar)
 
     def analysis(self, wave_data, sample_rate):
         fft_data = abs(fft(wave_data))
@@ -62,91 +60,124 @@ class FrameAnalysis(QWidget):
         db = 10 * numpy.log10(fft_data)
 
         # TODO: why is working so long? where is a problem?
-        GSSNR = self.get_parameters(freqArray, db)
+        GSSNR, SSNR = get_parameters(freqArray, db)
 
         # TODO: Here. Twice cycle with raising values
-        freqs, GSSNR_blocks = self.get_interval_parameters(freqArray, db)
+        freqs, GSSNR_blocks, SSNR_blocks = self.get_interval_parameters(freqArray, db)
 
-        self.plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks)
+        figure_GSSNR = plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks, 'GSSNR')
+        figure_SSNR = plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, 'SSNR')
 
-    @staticmethod
-    def get_parameters(freqArray, db):
-        # TODO: TEST
-        start_time = time()
+        self.add_analysis_GSSNR(figure_GSSNR)
+        self.add_analysis_SSNR(figure_SSNR)
 
-        start = 0
+        self.waiting.close()
 
-        numerator = 0
-        denominator = 0
 
-        for i in range(len(freqArray)):
-            if freqArray[i] - freqArray[start] <= 100.0:
-                continue
-            else:
-                # TODO: TEST
-                print(i)
+def plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, SSNR_type):
+    figure = pyplot.figure(figsize=(20, 20))
+    axes = figure.add_subplot(111)
+    axes.set_xlabel('Частота (Гц)')
+    axes.set_ylabel(SSNR_type)
 
-                finish = i
-                numerator, denominator = calculate_GSSNR_block(db[start:finish], numerator, denominator)
-                start = finish
+    for i in range(6, len(freqs)):
+        if i == 6:
+            axes.plot(freqs[i], SSNR_blocks[i], 'go', label='значения {} интервалов'.format(SSNR_type))
+        else:
+            axes.plot(freqs[i], SSNR_blocks[i], 'go')
 
-        if start < len(db) - 1:
-            numerator, denominator = calculate_GSSNR_block(db[start:], numerator, denominator)
+    axes.plot(freqs, SSNR_blocks, '--b', label='{} интервалов'.format(SSNR_type))
+    axes.plot(freqArray, [SSNR] * len(freqArray), 'r', label='{} аудиофайла'.format(SSNR_type))
 
-        GSSNR = numerator / denominator
+    axes.legend(loc='upper right')
 
-        print('GSSNR GSSNR GSSNR: ', time() - start_time)
+    return figure
 
-        return GSSNR
 
-    # TODO: Patent, algorithm
-    @staticmethod
-    def get_interval_parameters(freqArray, db):
-        # TODO: TEST
-        start_time = time()
+def calculate_block(db, GSSNR_numerator, GSSNR_denominator, SSNR, n):
+    sum1 = 0
+    sum2 = 0
+    for j in range(len(db)):
+        sum1 += db[j] ** 2
+        sum2 += db[j]
 
-        finish = 0
-        k = 1
+    mean_db = mean(db)
+    sigma_b = sqrt(sum1 / len(db) - (sum2 / len(db)) ** 2)
 
-        freqs = []
-        GSSNR_blocks = []
+    GSSNR_numerator += sigma_b ** 2
+    GSSNR_denominator += (sigma_b - mean_db) ** 2
 
-        for i in range(len(freqArray)):
-            # TODO: 100 Hz, too slow
-            if freqArray[i] - freqArray[0] <= 200.0 * k:
-                continue
-            else:
-                # TODO: TEST
-                print(i)
+    SSNR += 10 * lg(sigma_b ** 2 / ((sigma_b - mean_db) ** 2))
+    n.append(len(db))
 
-                finish = i
-                n = finish // (10 * k)
-                idx = 0
+    return GSSNR_numerator, GSSNR_denominator, SSNR, n
 
-                numerator = 0
-                denominator = 0
 
-                while idx < finish:
-                    db_cut = db[idx:min(idx + n, finish)]
-                    idx += n
+def get_parameters(freqArray, db):
+    # TODO: TEST
+    start_time = time()
 
-                    if idx < finish <= idx + n and finish - idx < n // 2:
-                        db_cut = db[(idx - n):finish]
-                        idx = finish
+    start = 0
 
-                    numerator, denominator = calculate_GSSNR_block(db_cut, numerator, denominator)
+    GSSNR_numerator = 0
+    GSSNR_denominator = 0
 
-                GSSNR_block = numerator / denominator
-                GSSNR_blocks.append(GSSNR_block)
-                freqs.append(freqArray[i])
-                k += 1
+    SSNR = 0
+    n = []
 
-        if finish < len(freqArray) - 1:
+    for i in range(len(freqArray)):
+        if freqArray[i] - freqArray[start] <= 100.0:
+            continue
+        else:
+            # TODO: TEST
+            print(i)
+
+            finish = i
+            GSSNR_numerator, GSSNR_denominator, SSNR, n = calculate_block(db[start:finish], GSSNR_numerator,
+                                                                          GSSNR_denominator, SSNR, n)
+            start = finish
+
+    if start < len(db) - 1:
+        GSSNR_numerator, GSSNR_denominator, SSNR, n = calculate_block(db[start:], GSSNR_numerator, GSSNR_denominator,
+                                                                      SSNR, n)
+
+    GSSNR = GSSNR_numerator / GSSNR_denominator
+    SSNR = SSNR / mean(n)
+
+    print('GSSNR SSNR GSSNR SSNR: ', time() - start_time)
+
+    return GSSNR, SSNR
+
+
+# TODO: Patent, algorithm
+def get_interval_parameters(freqArray, db):
+    # TODO: TEST
+    start_time = time()
+
+    finish = 0
+    k = 1
+
+    freqs = []
+    GSSNR_blocks = []
+    SSNR_blocks = []
+
+    for i in range(len(freqArray)):
+        # TODO: 100 Hz, too slow
+        if freqArray[i] - freqArray[0] <= 200.0 * k:
+            continue
+        else:
+            # TODO: TEST
+            print(i)
+
+            finish = i
             n = finish // (10 * k)
             idx = 0
 
-            numerator = 0
-            denominator = 0
+            GSSNR_numerator = 0
+            GSSNR_denominator = 0
+
+            SSNR = 0
+            mean_n = []
 
             while idx < finish:
                 db_cut = db[idx:min(idx + n, finish)]
@@ -156,31 +187,50 @@ class FrameAnalysis(QWidget):
                     db_cut = db[(idx - n):finish]
                     idx = finish
 
-                numerator, denominator = calculate_GSSNR_block(db_cut, numerator, denominator)
+                GSSNR_numerator, GSSNR_denominator, SSNR, mean_n = calculate_block(db_cut, GSSNR_numerator,
+                                                                                   GSSNR_denominator, SSNR, mean_n)
+            freqs.append(freqArray[i])
 
-            GSSNR_block = numerator / denominator
+            GSSNR_block = GSSNR_numerator / GSSNR_denominator
             GSSNR_blocks.append(GSSNR_block)
-            freqs.append(freqArray[len(freqArray) - 1])
 
-        print('GSSNR INTERVAL GSSNR INTERVAL: ', time() - start_time)
+            SSNR_block = SSNR / mean(mean_n)
+            SSNR_blocks.append(SSNR_block)
 
-        return freqs, GSSNR_blocks
+            k += 1
 
+    if finish < len(freqArray) - 1:
+        n = finish // (10 * k)
+        idx = 0
 
-def calculate_GSSNR_block(db, numerator, denominator):
-    sum1 = 0
-    sum2 = 0
-    for j in range(len(db)):
-        sum1 += db[j] ** 2
-        sum2 += db[j]
+        GSSNR_numerator = 0
+        GSSNR_denominator = 0
 
-    mean_db_hundred = mean(db)
-    sigma_b = sqrt(sum1 / len(db) - (sum2 / len(db)) ** 2)
+        SSNR = 0
+        mean_n = []
 
-    numerator += sigma_b ** 2
-    denominator += (sigma_b - mean_db_hundred) ** 2
+        while idx < finish:
+            db_cut = db[idx:min(idx + n, finish)]
+            idx += n
 
-    return numerator, denominator
+            if idx < finish <= idx + n and finish - idx < n // 2:
+                db_cut = db[(idx - n):finish]
+                idx = finish
+
+            GSSNR_numerator, GSSNR_denominator, SSNR, mean_n = calculate_block(db_cut, GSSNR_numerator,
+                                                                               GSSNR_denominator, SSNR, mean_n)
+
+        freqs.append(freqArray[len(freqArray) - 1])
+
+        GSSNR_block = GSSNR_numerator / GSSNR_denominator
+        GSSNR_blocks.append(GSSNR_block)
+
+        SSNR_block = SSNR / mean(mean_n)
+        SSNR_blocks.append(SSNR_block)
+
+    print('GSSNR INTERVAL SSNR INTERVAL: ', time() - start_time)
+
+    return freqs, GSSNR_blocks, SSNR_blocks
 
 # TODO: shitted shit of shit
 # def gssnr_analysis(gssnr_blocks):
