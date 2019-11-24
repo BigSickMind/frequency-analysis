@@ -1,4 +1,5 @@
 .idea/
+venv/
 src/logic/old/
 src/logic/watermark/
 src/tests/TestFiles/
