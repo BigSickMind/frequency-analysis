@@ -9,7 +9,7 @@ class Ui_FrameSpectrogram(object):
         FrameSpectrogram.setMinimumSize(QtCore.QSize(600, 600))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/spectrogram.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/spectrogram.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameSpectrogram.setWindowIcon(icon)
 
         self.imageLayout = QtWidgets.QVBoxLayout(FrameSpectrogram)

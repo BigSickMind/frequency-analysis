@@ -10,7 +10,7 @@ class Ui_FrameHeader(object):
         FrameHeader.setMaximumSize(QtCore.QSize(585, 540))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/header.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/header.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameHeader.setWindowIcon(icon)
 
         self.tableInfo = QtWidgets.QTableWidget(FrameHeader)

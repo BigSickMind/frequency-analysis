@@ -7,7 +7,7 @@ from matplotlib.backends.backend_qt5agg import (
 
 from PyQt5.QtWidgets import *
 
-from src.frames.spectrogram import Ui_FrameSpectrogram
+from frames.spectrogram import Ui_FrameSpectrogram
 
 
 class FrameSpectrogram(QWidget):

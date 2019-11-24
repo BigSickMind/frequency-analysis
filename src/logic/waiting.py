@@ -14,9 +14,6 @@ class FrameWaiting(QWidget):
 
         self.show()
 
-    def setValue(self, value):
-        self.ui.progressBar.setValue(value)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

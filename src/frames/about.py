@@ -9,7 +9,7 @@ class Ui_FrameAbout(object):
         FrameAbout.setMinimumSize(QtCore.QSize(490, 260))
         FrameAbout.setMaximumSize(QtCore.QSize(490, 260))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/about.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/about.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameAbout.setWindowIcon(icon)
         self.textAbout = QtWidgets.QTextEdit(FrameAbout)
         self.textAbout.setGeometry(QtCore.QRect(0, 0, 491, 261))

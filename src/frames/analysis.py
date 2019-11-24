@@ -9,7 +9,7 @@ class Ui_FrameAnalysis(object):
         FrameAnalysis.setMinimumSize(QtCore.QSize(600, 600))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/analysis.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/analysis.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameAnalysis.setWindowIcon(icon)
 
         self.imageLayout = QtWidgets.QVBoxLayout(FrameAnalysis)

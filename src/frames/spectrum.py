@@ -9,7 +9,7 @@ class Ui_FrameSpectrum(object):
         FrameSpectrum.setMinimumSize(QtCore.QSize(600, 600))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/spectrum.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/spectrum.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameSpectrum.setWindowIcon(icon)
 
         self.verticalLayout = QtWidgets.QVBoxLayout(FrameSpectrum)

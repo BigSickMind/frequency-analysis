@@ -9,7 +9,7 @@ class Ui_FrameDefault(object):
         FrameDefault.setMinimumSize(QtCore.QSize(900, 600))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/main.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/main.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameDefault.setWindowIcon(icon)
 
         self.centralwidget = QtWidgets.QWidget(FrameDefault)

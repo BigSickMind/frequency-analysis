@@ -2,7 +2,7 @@ import sys
 
 from PyQt5.QtWidgets import *
 
-from src.frames.about import Ui_FrameAbout
+from frames.about import Ui_FrameAbout
 
 
 class FrameAbout(QWidget):

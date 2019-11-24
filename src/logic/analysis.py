@@ -15,9 +15,7 @@ from time import time
 
 from PyQt5.QtWidgets import *
 
-from src.frames.analysis import Ui_FrameAnalysis
-
-from src.logic.waiting import FrameWaiting
+from frames.analysis import Ui_FrameAnalysis
 
 
 class FrameAnalysis(QWidget):
@@ -63,15 +61,13 @@ class FrameAnalysis(QWidget):
         GSSNR, SSNR = get_parameters(freqArray, db)
 
         # TODO: Here. Twice cycle with raising values
-        freqs, GSSNR_blocks, SSNR_blocks = self.get_interval_parameters(freqArray, db)
+        freqs, GSSNR_blocks, SSNR_blocks = get_interval_parameters(freqArray, db)
 
         figure_GSSNR = plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks, 'GSSNR')
         figure_SSNR = plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, 'SSNR')
 
         self.add_analysis_GSSNR(figure_GSSNR)
         self.add_analysis_SSNR(figure_SSNR)
-
-        self.waiting.close()
 
 
 def plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, SSNR_type):

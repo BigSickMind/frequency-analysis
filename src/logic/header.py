@@ -4,9 +4,9 @@ from datetime import time
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-from src.frames.header import Ui_FrameHeader
+from frames.header import Ui_FrameHeader
 
-from src.formats.wav_formats import get_AudioFormat
+from formats.wav_formats import get_AudioFormat
 
 INVALID_FORMAT = "Некорректный формат файла."
 CORRUPT = "Не удаётся открыть файл. Возможно он повреждён."

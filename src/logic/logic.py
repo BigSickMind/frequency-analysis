@@ -23,16 +23,16 @@ from matplotlib.backends.backend_qt5agg import (
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 
-from src.frames.main import Ui_FrameDefault
+from frames.main import Ui_FrameDefault
 
-from src.logic.error import FrameError
+from logic.error import FrameError
 
-from src.logic.header import FrameHeader, get_header
-from src.logic.spectrogram import FrameSpectrogram
-from src.logic.spectrum import FrameSpectrum
-from src.logic.analysis import FrameAnalysis
+from logic.header import FrameHeader, get_header
+from logic.spectrogram import FrameSpectrogram
+from logic.spectrum import FrameSpectrum
+from logic.analysis import FrameAnalysis
 
-from src.logic.about import FrameAbout
+from logic.about import FrameAbout
 
 
 # TODO: check message.wav. Seems that it's normal, but program crashes
@@ -45,6 +45,7 @@ class Main(QMainWindow):
 
         self.last_path = ''
 
+    def start(self):
         self.ui.actionOpen.triggered.connect(self.open_file)
         self.ui.actionExit.triggered.connect(self.exit)
 
@@ -210,7 +211,7 @@ class Main(QMainWindow):
             self.set_main_window(path, message, NumChannels)
 
     def get_header(self):
-        self.info = FrameHeader(self.wav_info)
+        self.header = FrameHeader(self.wav_info)
 
     def plot_spectrogram(self):
         # self.spectrogram = FrameSpectrogram(self.wave_data, self.sample_rate)

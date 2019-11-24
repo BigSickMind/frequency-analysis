@@ -10,7 +10,7 @@ class Ui_FrameError(object):
         FrameError.setMaximumSize(QtCore.QSize(500, 90))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../icons/error.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../src/icons/error.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameError.setWindowIcon(icon)
 
         self.buttonOk = QtWidgets.QPushButton(FrameError)
