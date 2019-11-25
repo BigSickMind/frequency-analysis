@@ -4,7 +4,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_FrameHeader(object):
     def setupUi(self, FrameHeader):
         FrameHeader.setObjectName("FrameHeader")
-        FrameHeader.setWindowModality(QtCore.Qt.ApplicationModal)
         FrameHeader.resize(585, 540)
         FrameHeader.setMinimumSize(QtCore.QSize(585, 540))
         FrameHeader.setMaximumSize(QtCore.QSize(585, 540))
@@ -13,7 +12,9 @@ class Ui_FrameHeader(object):
         icon.addPixmap(QtGui.QPixmap("../src/icons/header.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameHeader.setWindowIcon(icon)
 
-        self.tableInfo = QtWidgets.QTableWidget(FrameHeader)
+        self.centralwidget = QtWidgets.QWidget(FrameHeader)
+        self.centralwidget.setObjectName("centralwidget")
+        self.tableInfo = QtWidgets.QTableWidget(self.centralwidget)
         self.tableInfo.setGeometry(QtCore.QRect(80, 40, 431, 451))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -68,9 +69,10 @@ class Ui_FrameHeader(object):
         self.tableInfo.setItem(0, 0, item)
         self.tableInfo.horizontalHeader().setVisible(False)
         self.tableInfo.horizontalHeader().setDefaultSectionSize(204)
-        self.buttonOk = QtWidgets.QPushButton(FrameHeader)
+        self.buttonOk = QtWidgets.QPushButton(self.centralwidget)
         self.buttonOk.setGeometry(QtCore.QRect(480, 500, 91, 31))
         self.buttonOk.setObjectName("buttonOk")
+        FrameHeader.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(FrameHeader)
         QtCore.QMetaObject.connectSlotsByName(FrameHeader)

@@ -1,13 +1,15 @@
 import sys
 
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 from frames.about import Ui_FrameAbout
 
 
-class FrameAbout(QWidget):
-    def __init__(self):
-        super(FrameAbout, self).__init__()
+class FrameAbout(QMainWindow):
+    def __init__(self, parent=None):
+        super(FrameAbout, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameAbout()
         self.ui.setupUi(self)

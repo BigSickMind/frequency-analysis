@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>FrameSpectrogram</class>
- <widget class="QWidget" name="FrameSpectrogram">
-  <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
-  </property>
+ <widget class="QMainWindow" name="FrameSpectrogram">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,18 +23,13 @@
    <iconset>
     <normaloff>../icons/spectrogram.png</normaloff>../icons/spectrogram.png</iconset>
   </property>
-  <layout class="QVBoxLayout" name="imageLayout">
-   <item>
-    <widget class="QWidget" name="imageWidget" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-    </widget>
-   </item>
-  </layout>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="imageLayout">
+    <item>
+     <widget class="QWidget" name="imageWidget" native="true"/>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

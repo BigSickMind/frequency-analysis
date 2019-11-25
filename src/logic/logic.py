@@ -21,27 +21,27 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar)
 
 from PyQt5.QtWidgets import *
-from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
 
-from frames.main import Ui_FrameDefault
+from frames.main import Ui_FrameMain
+
+from logic import collect
 
 from logic.error import FrameError
-
 from logic.header import FrameHeader, get_header
 from logic.spectrogram import FrameSpectrogram
 from logic.spectrum import FrameSpectrum
 from logic.analysis import FrameAnalysis
-
 from logic.about import FrameAbout
 
 
-# TODO: check message.wav. Seems that it's normal, but program crashes
 class Main(QMainWindow):
-    def __init__(self):
-        super(Main, self).__init__()
+    def __init__(self, parent=None):
+        super(Main, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
-        self.ui = Ui_FrameDefault()
-        self.FrameDefault = self.ui.setupUi(self)
+        self.ui = Ui_FrameMain()
+        self.FrameMain = self.ui.setupUi(self)
 
         self.last_path = ''
 
@@ -50,10 +50,6 @@ class Main(QMainWindow):
         self.ui.actionExit.triggered.connect(self.exit)
 
         self.ui.actionHeader.triggered.connect(self.get_header)
-
-        # TODO: spectrogram and spectrum plot - different things?
-        #  spectrum plot - frequency/db, spectrogram - time/frequency?
-        #  I think i understand
         self.ui.actionSpectrogram.triggered.connect(self.plot_spectrogram)
         self.ui.actionSpectrum.triggered.connect(self.plot_spectrum)
         self.ui.actionAnalysis.triggered.connect(self.frequency_analysis)
@@ -63,14 +59,13 @@ class Main(QMainWindow):
 
         self.show()
 
-    @staticmethod
-    def exit():
-        sys.exit()
+    def exit(self):
+        self.close()
 
     def print_error(self, message):
-        self.error = FrameError(message)
+        self.error = FrameError(message, parent=self)
 
-        self.ui.renameWindowTitle(self.FrameDefault)
+        self.ui.renameWindowTitle(self.FrameMain)
 
         if self.ui.actionHeader.isEnabled():
             self.ui.actionHeader.setDisabled(True)
@@ -133,7 +128,6 @@ class Main(QMainWindow):
         # TODO: refactor this shit
         #  Set picture size like window
 
-        # TODO: on little screens
         figure = pyplot.figure(figsize=(20, 20))
 
         # TODO: fix problems?
@@ -160,15 +154,18 @@ class Main(QMainWindow):
             elif NumChannels == 2:
                 self.build_stereo(figure, time)
 
-            self.canvas = FigureCanvas(figure)
-            self.ui.imageLayout.addWidget(self.canvas)
-            self.canvas.draw()
+            canvas = FigureCanvas(figure)
+            self.ui.imageLayout.addWidget(canvas)
+            canvas.draw()
 
             # self.scroll = QScrollBar(Qt.Horizontal)
             # self.ui.imageLayout.addWidget(self.scroll)
 
-            self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
-            self.ui.imageLayout.addWidget(self.toolbar)
+            toolbar = NavigationToolbar(canvas, self.ui.imageWidget, coordinates=True)
+            self.ui.imageLayout.addWidget(toolbar)
+
+            pyplot.close(figure)
+            collect()
 
     def set_main_window(self, path, message, NumChannels):
         if not self.wav_info:
@@ -178,7 +175,7 @@ class Main(QMainWindow):
         else:
             self.last_path = path
 
-            self.ui.renameWindowTitle(self.FrameDefault, path)
+            self.ui.renameWindowTitle(self.FrameMain, path)
 
             if not self.ui.actionHeader.isEnabled():
                 self.ui.actionHeader.setEnabled(True)
@@ -192,13 +189,10 @@ class Main(QMainWindow):
     def open_file(self):
 
         options = QFileDialog.Options()
-        # TODO: default directory?
-        directory = "D:/Github/frequency-analysis/src/tests/test/"
-        # directory = ""
 
         # self.path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
-        path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", directory,
-                                              "All Files (*);;VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff)",
+        path, _ = QFileDialog.getOpenFileName(self, "Выберите аудиофайл", '',
+                                              "VLC media file (*.wav *.mp3 *.ogg *.flac *.aiff);;All Files (*)",
                                               options=options)
         if path and self.last_path != path:
             for i in reversed(range(self.ui.imageLayout.count())):
@@ -211,28 +205,28 @@ class Main(QMainWindow):
             self.set_main_window(path, message, NumChannels)
 
     def get_header(self):
-        self.header = FrameHeader(self.wav_info)
+        self.header = FrameHeader(self.wav_info, parent=self)
 
     def plot_spectrogram(self):
         # self.spectrogram = FrameSpectrogram(self.wave_data, self.sample_rate)
-        self.spectrogram = FrameSpectrogram(self.wave.data, self.wave.rate)
+        self.spectrogram = FrameSpectrogram(self.wave.data, self.wave.rate, parent=self)
         # self.spectrogram = FrameSpectrogram(self.data, self.rate)
 
     def plot_spectrum(self):
         # self.spectrum = FrameSpectrum(self.wave_data[:, 0], self.sample_rate)
-        self.spectrum = FrameSpectrum(self.wave.data[:, 0], self.wave.rate)
+        self.spectrum = FrameSpectrum(self.wave.data[:, 0], self.wave.rate, parent=self)
         # self.spectrum = FrameSpectrum(self.data[:, 0], self.rate)
 
     def frequency_analysis(self):
         # self.analysis = FrameAnalysis(self.wave_data[:, 0], self.sample_rate)
-        self.analysis = FrameAnalysis(self.wave.data[:, 0], self.wave.rate)
+        self.analysis = FrameAnalysis(self.wave.data[:, 0], self.wave.rate, parent=self)
         # self.analysis = FrameAnalysis(self.data[:, 0], self.rate)
 
     def help(self):
         pass
 
     def about(self):
-        self.about = FrameAbout()
+        self.about = FrameAbout(parent=self)
 
 
 if __name__ == '__main__':
@@ -241,13 +235,13 @@ if __name__ == '__main__':
 
     sys.exit(app.exec_())
 
-# return FrameDefault
+# return FrameMain
 #
-# def renameWindowTitle(self, FrameDefault, path=""):
+# def renameWindowTitle(self, FrameMain, path=""):
 #     if not path:
 #         title = "Частотный анализатор"
 #     else:
 #         title = "Частотный анализатор ({})".format(path)
 #
 #     _translate = QtCore.QCoreApplication.translate
-#     FrameDefault.setWindowTitle(_translate("FrameDefault", title))
+#     FrameMain.setWindowTitle(_translate("FrameMain", title))

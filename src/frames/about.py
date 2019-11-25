@@ -4,17 +4,21 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_FrameAbout(object):
     def setupUi(self, FrameAbout):
         FrameAbout.setObjectName("FrameAbout")
-        FrameAbout.setWindowModality(QtCore.Qt.ApplicationModal)
         FrameAbout.resize(490, 260)
         FrameAbout.setMinimumSize(QtCore.QSize(490, 260))
         FrameAbout.setMaximumSize(QtCore.QSize(490, 260))
+
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../src/icons/about.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FrameAbout.setWindowIcon(icon)
-        self.textAbout = QtWidgets.QTextEdit(FrameAbout)
+
+        self.centralwidget = QtWidgets.QWidget(FrameAbout)
+        self.centralwidget.setObjectName("centralwidget")
+        self.textAbout = QtWidgets.QTextEdit(self.centralwidget)
         self.textAbout.setGeometry(QtCore.QRect(0, 0, 491, 261))
         self.textAbout.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.textAbout.setObjectName("textAbout")
+        FrameAbout.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(FrameAbout)
         QtCore.QMetaObject.connectSlotsByName(FrameAbout)

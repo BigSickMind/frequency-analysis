@@ -1,13 +1,17 @@
 import sys
 
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 from frames.error import Ui_FrameError
 
+from logic import collect
 
-class FrameError(QWidget):
-    def __init__(self, message):
-        super(FrameError, self).__init__()
+
+class FrameError(QMainWindow):
+    def __init__(self, message, parent=None):
+        super(FrameError, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameError()
         self.ui.setupUi(self)
@@ -18,6 +22,7 @@ class FrameError(QWidget):
         self.show()
 
     def ok(self):
+        collect()
         self.close()
 
 

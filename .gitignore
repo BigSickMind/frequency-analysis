@@ -2,10 +2,10 @@
 
 frequency-analysis-exe/
 venv/
+tests/
 
-src/logic/old/
-src/logic/watermark/
-src/tests/TestFiles/
+src/logic/*/
+src/ui/*/
 src/formats/script.py
 
 commands.txt

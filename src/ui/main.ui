@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FrameDefault</class>
- <widget class="QMainWindow" name="FrameDefault">
+ <class>FrameMain</class>
+ <widget class="QMainWindow" name="FrameMain">
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>

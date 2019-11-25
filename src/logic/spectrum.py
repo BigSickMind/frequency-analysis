@@ -8,13 +8,17 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar)
 
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 from frames.spectrum import Ui_FrameSpectrum
 
+from logic import collect
 
-class FrameSpectrum(QWidget):
-    def __init__(self, wave_data, sample_rate):
-        super(FrameSpectrum, self).__init__()
+
+class FrameSpectrum(QMainWindow):
+    def __init__(self, wave_data, sample_rate, parent=None):
+        super(FrameSpectrum, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameSpectrum()
         self.ui.setupUi(self)
@@ -48,18 +52,23 @@ class FrameSpectrum(QWidget):
 
         self.add_spectrum(figure)
 
+        pyplot.close(figure)
+        collect()
+
     def ok(self):
+        collect()
         self.close()
 
     def add_spectrum(self, figure):
-        self.canvas = FigureCanvas(figure)
-        # self.ui.imageLayout.addWidget(self.canvas)
-        self.ui.imageLayout.addWidget(self.canvas)
-        self.canvas.draw()
+        canvas = FigureCanvas(figure)
+        self.ui.imageLayout.addWidget(canvas)
+        canvas.draw()
 
-        self.toolbar = NavigationToolbar(self.canvas, self.ui.imageWidget, coordinates=True)
+        toolbar = NavigationToolbar(canvas, self.ui.imageWidget, coordinates=True)
         # self.ui.imageLayout.addWidget(self.toolbar)
-        self.ui.imageLayout.addWidget(self.toolbar)
+        self.ui.imageLayout.addWidget(toolbar)
+
+        collect()
 
     def plot_spectrum(self):
         # TODO: refactor this shit
@@ -86,3 +95,6 @@ class FrameSpectrum(QWidget):
             axes.set_ylabel('Мощность')
 
         self.add_spectrum(figure)
+
+        pyplot.close(figure)
+        collect()

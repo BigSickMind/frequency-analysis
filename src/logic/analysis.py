@@ -14,13 +14,17 @@ from math import log10 as lg
 from time import time
 
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 from frames.analysis import Ui_FrameAnalysis
 
+from logic import collect
 
-class FrameAnalysis(QWidget):
-    def __init__(self, wave_data, sample_rate):
-        super(FrameAnalysis, self).__init__()
+
+class FrameAnalysis(QMainWindow):
+    def __init__(self, wave_data, sample_rate, parent=None):
+        super(FrameAnalysis, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameAnalysis()
         self.ui.setupUi(self)
@@ -31,6 +35,7 @@ class FrameAnalysis(QWidget):
         self.show()
 
     def ok(self):
+        collect()
         self.close()
 
     def add_analysis_GSSNR(self, figure_GSSNR):
@@ -41,6 +46,8 @@ class FrameAnalysis(QWidget):
         toolbar = NavigationToolbar(canvas, self.ui.GSSNRWidget, coordinates=True)
         self.ui.GSSNRLayout.addWidget(toolbar)
 
+        collect()
+
     def add_analysis_SSNR(self, figure_SSNR):
         canvas = FigureCanvas(figure_SSNR)
         self.ui.SSNRLayout.addWidget(canvas)
@@ -48,6 +55,8 @@ class FrameAnalysis(QWidget):
 
         toolbar = NavigationToolbar(canvas, self.ui.SSNRWidget, coordinates=True)
         self.ui.SSNRLayout.addWidget(toolbar)
+
+        collect()
 
     def analysis(self, wave_data, sample_rate):
         fft_data = abs(fft(wave_data))
@@ -68,6 +77,10 @@ class FrameAnalysis(QWidget):
 
         self.add_analysis_GSSNR(figure_GSSNR)
         self.add_analysis_SSNR(figure_SSNR)
+
+        pyplot.close(figure_GSSNR)
+        pyplot.close(figure_SSNR)
+        collect()
 
 
 def plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, SSNR_type):

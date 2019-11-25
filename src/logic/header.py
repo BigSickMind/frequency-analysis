@@ -6,6 +6,8 @@ from PyQt5.QtCore import Qt
 
 from frames.header import Ui_FrameHeader
 
+from logic import collect
+
 from formats.wav_formats import get_AudioFormat
 
 INVALID_FORMAT = "Некорректный формат файла."
@@ -22,9 +24,10 @@ FORMAT = {
 DELETIONS = (8, 1024, 1024, 1024, 1024,)
 
 
-class FrameHeader(QWidget):
-    def __init__(self, wav_info):
-        super(FrameHeader, self).__init__()
+class FrameHeader(QMainWindow):
+    def __init__(self, wav_info, parent=None):
+        super(FrameHeader, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.ui = Ui_FrameHeader()
         self.ui.setupUi(self)
@@ -36,6 +39,7 @@ class FrameHeader(QWidget):
         self.show()
 
     def ok(self):
+        collect()
         self.close()
 
     def fill_table(self, wav_info):
@@ -49,6 +53,8 @@ class FrameHeader(QWidget):
                 item = QTableWidgetItem(str(wav_info[i + j]))
                 item.setFlags(Qt.ItemIsEnabled)
                 self.ui.tableInfo.setItem(i, j, item)
+
+        collect()
 
 
 def format_determine(value):
@@ -152,7 +158,8 @@ def get_header(path, filename):
     #  Add translation for Format: PCM = 1, etc. Find another Formats
     #  Convert ints to str
 
-    wav_info = [filename, duration, ChunkID, format_determine(ChunkSize), Format, Subchunk1ID, "{} бит".format(Subchunk1Size),
+    wav_info = [filename, duration, ChunkID, format_determine(ChunkSize), Format, Subchunk1ID,
+                "{} бит".format(Subchunk1Size),
                 get_AudioFormat(AudioFormat), NumChannels, "{} Гц".format(SampleRate), "{} байт/сек".format(ByteRate),
                 "{} байт".format(BlockAlign), "{} бит".format(BitsPerSample), Subchunk2ID,
                 format_determine(Subchunk2Size)]
