@@ -1,7 +1,11 @@
 .idea/
+
+frequency-analysis-exe/
 venv/
+
 src/logic/old/
 src/logic/watermark/
 src/tests/TestFiles/
 src/formats/script.py
+
 commands.txt

@@ -12,7 +12,7 @@ import wavio
 import wave
 
 # TODO: good library for another formats (except MP3)
-import soundfile
+# import soundfile
 
 import matplotlib
 from matplotlib import pyplot
