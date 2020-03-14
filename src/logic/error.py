@@ -26,7 +26,6 @@ class FrameError(QMainWindow):
         self.close()
 
 
-# Test
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = FrameError('1')

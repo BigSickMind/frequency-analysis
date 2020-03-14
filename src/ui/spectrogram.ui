@@ -24,9 +24,37 @@
     <normaloff>../icons/spectrogram.png</normaloff>../icons/spectrogram.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="imageLayout">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="12,1">
     <item>
-     <widget class="QWidget" name="imageWidget" native="true"/>
+     <layout class="QVBoxLayout" name="imageLayout">
+      <item>
+       <widget class="QWidget" name="imageWidget" native="true"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonOk">
+        <property name="text">
+         <string>OK</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

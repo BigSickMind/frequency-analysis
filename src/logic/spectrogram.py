@@ -1,5 +1,4 @@
 import numpy
-import gc
 
 from logic import collect
 
@@ -22,9 +21,15 @@ class FrameSpectrogram(QMainWindow):
         self.ui = Ui_FrameSpectrogram()
         self.ui.setupUi(self)
 
+        self.ui.buttonOk.clicked.connect(self.ok)
+
         self.plot_spectrogram(wave_data, sample_rate)
 
         self.show()
+
+    def ok(self):
+        collect()
+        self.close()
 
     def add_spectrogram(self, figure):
         canvas = FigureCanvas(figure)
@@ -37,23 +42,18 @@ class FrameSpectrogram(QMainWindow):
         collect()
 
     def plot_spectrogram(self, wave_data, sample_rate):
-        # TODO: refactor this shit
-        #  Spectrogram for 2 channels or what?
         window_size = 2048
         window_step = 512
 
         if isinstance(wave_data[0], numpy.ndarray):
             wave_data = wave_data.mean(1)
 
-        # TODO: on little screens
         figure = pyplot.figure(figsize=(20, 20))
         axes = figure.add_subplot(111)
         axes.set_xlabel('Время (сек)')
         axes.set_ylabel('Частота (Гц)')
         _, _, _, im = axes.specgram(wave_data, NFFT=window_size, noverlap=window_size - window_step, Fs=sample_rate)
         figure.colorbar(im).set_label('Мощность (дБ)')
-
-        # axes = self.figure.add_axes((0.1, 0.1, 0.8, 0.8))
 
         self.add_spectrogram(figure)
 

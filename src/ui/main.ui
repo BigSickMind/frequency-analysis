@@ -54,19 +54,17 @@
     <property name="title">
      <string>Анализ</string>
     </property>
+    <addaction name="actionAnalysis"/>
+    <addaction name="separator"/>
     <addaction name="actionHeader"/>
     <addaction name="actionSpectrogram"/>
     <addaction name="actionSpectrum"/>
-    <addaction name="separator"/>
-    <addaction name="actionAnalysis"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
      <string>Справка</string>
     </property>
-    <addaction name="actionHelp"/>
-    <addaction name="separator"/>
-    <addaction name="actionAbout"/>
+    <addaction name="actionAboutProgram"/>
    </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_analysis"/>
@@ -142,14 +140,6 @@
     <string>Анализ на наличие внесённых изменений</string>
    </property>
   </action>
-  <action name="actionHelp">
-   <property name="text">
-    <string>Справка</string>
-   </property>
-   <property name="shortcut">
-    <string>F1</string>
-   </property>
-  </action>
   <action name="actionSpectrogram">
    <property name="enabled">
     <bool>false</bool>
@@ -159,6 +149,17 @@
    </property>
    <property name="statusTip">
     <string>Спектрограмма</string>
+   </property>
+  </action>
+  <action name="actionAboutProgram">
+   <property name="text">
+    <string>О программе...</string>
+   </property>
+   <property name="iconText">
+    <string>О программе...</string>
+   </property>
+   <property name="toolTip">
+    <string>О программе...</string>
    </property>
   </action>
  </widget>

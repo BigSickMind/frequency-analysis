@@ -65,14 +65,11 @@ class FrameSpectrum(QMainWindow):
         canvas.draw()
 
         toolbar = NavigationToolbar(canvas, self.ui.imageWidget, coordinates=True)
-        # self.ui.imageLayout.addWidget(self.toolbar)
         self.ui.imageLayout.addWidget(toolbar)
 
         collect()
 
     def plot_spectrum(self):
-        # TODO: refactor this shit
-
         for i in reversed(range(self.ui.imageLayout.count())):
             self.ui.imageLayout.removeWidget(self.ui.imageLayout.itemAt(i).widget())
 
@@ -83,12 +80,10 @@ class FrameSpectrum(QMainWindow):
 
         if text == 'Логарифмический':
             axes.plot(self.freqArray, self.db)
-            # axes.magnitude_spectrum(self.wave_data, Fs=self.sample_rate, scale='dB')
 
             axes.set_xlabel('Частота (Гц)')
             axes.set_ylabel('Мощность (дБ)')
         else:
-            # axes.plot(self.freqArray, self.fft_data)
             axes.magnitude_spectrum(self.wave_data, Fs=self.sample_rate)
 
             axes.set_xlabel('Частота (Гц)')

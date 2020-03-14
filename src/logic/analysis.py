@@ -22,7 +22,7 @@ from logic import collect
 
 
 class FrameAnalysis(QMainWindow):
-    def __init__(self, wave_data, sample_rate, parent=None):
+    def __init__(self, filename, NumChannels, values, wave_data, sample_rate, parent=None):
         super(FrameAnalysis, self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -30,7 +30,7 @@ class FrameAnalysis(QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.buttonOk.clicked.connect(self.ok)
-        self.analysis(wave_data, sample_rate)
+        self.analysis(filename, NumChannels, values, wave_data, sample_rate)
 
         self.show()
 
@@ -58,28 +58,49 @@ class FrameAnalysis(QMainWindow):
 
         collect()
 
-    def analysis(self, wave_data, sample_rate):
-        fft_data = abs(fft(wave_data))
-        n = len(wave_data)
-        fft_data = fft_data[0:(n // 2)]
-        fft_data = fft_data / float(n)
-        freqArray = numpy.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
-        db = 10 * numpy.log10(fft_data)
+    def add_results(self, filename, NumChannels, values, result_GSSNR, result_SSNR):
+        if NumChannels < 0:
+            self.ui.textResults.append('В аудиофайл {}.wav вносились изменения\n'.format(filename))
 
-        # TODO: why is working so long? where is a problem?
-        GSSNR, SSNR = get_parameters(freqArray, db)
+            if NumChannels == -1:
+                self.ui.textResults.append(
+                    'В заголовке в {} вместо значения "{}" записано значение "{}"'.format(*values))
+            else:
+                self.ui.textResults.append(
+                    'В заголовке значения не удовлетворяют формуле {} = {}'.format(*values))
+        else:
+            if result_GSSNR and result_SSNR:
+                self.ui.textResults.append('В аудиофайл {}.wav не вносились изменения'.format(filename))
+            else:
+                self.ui.textResults.append('В аудиофайл {}.wav вносились изменения в области данных\n'.format(filename))
 
-        # TODO: Here. Twice cycle with raising values
-        freqs, GSSNR_blocks, SSNR_blocks = get_interval_parameters(freqArray, db)
+    def analysis(self, filename, NumChannels, values, wave_data, sample_rate):
+        result_GSSNR, result_SSNR = False, False
 
-        figure_GSSNR = plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks, 'GSSNR')
-        figure_SSNR = plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, 'SSNR')
+        if NumChannels > 0:
+            fft_data = abs(fft(wave_data))
+            n = len(wave_data)
+            fft_data = fft_data[0:(n // 2)]
+            fft_data = fft_data / float(n)
+            freqArray = numpy.arange(0, (n // 2), 1.0) * (sample_rate * 1.0 / n)
+            db = 10 * numpy.log10(fft_data)
 
-        self.add_analysis_GSSNR(figure_GSSNR)
-        self.add_analysis_SSNR(figure_SSNR)
+            GSSNR, SSNR = get_parameters(freqArray, db)
 
-        pyplot.close(figure_GSSNR)
-        pyplot.close(figure_SSNR)
+            freqs, GSSNR_blocks, SSNR_blocks, result_GSSNR, result_SSNR = get_interval_parameters(freqArray, db)
+
+            figure_GSSNR = plot_analysis(freqArray, GSSNR, freqs, GSSNR_blocks, 'GSSNR')
+            figure_SSNR = plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, 'SSNR')
+
+            self.add_analysis_GSSNR(figure_GSSNR)
+            self.add_analysis_SSNR(figure_SSNR)
+
+        self.add_results(filename, NumChannels, values, result_GSSNR, result_SSNR)
+
+        if NumChannels > 0:
+            pyplot.close(figure_GSSNR)
+            pyplot.close(figure_SSNR)
+
         collect()
 
 
@@ -89,8 +110,8 @@ def plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, SSNR_type):
     axes.set_xlabel('Частота (Гц)')
     axes.set_ylabel(SSNR_type)
 
-    for i in range(6, len(freqs)):
-        if i == 6:
+    for i in range(len(freqs)):
+        if i == 0:
             axes.plot(freqs[i], SSNR_blocks[i], 'go', label='значения {} интервалов'.format(SSNR_type))
         else:
             axes.plot(freqs[i], SSNR_blocks[i], 'go')
@@ -98,7 +119,10 @@ def plot_analysis(freqArray, SSNR, freqs, SSNR_blocks, SSNR_type):
     axes.plot(freqs, SSNR_blocks, '--b', label='{} интервалов'.format(SSNR_type))
     axes.plot(freqArray, [SSNR] * len(freqArray), 'r', label='{} аудиофайла'.format(SSNR_type))
 
-    axes.legend(loc='upper right')
+    if SSNR_type == 'GSSNR':
+        axes.legend(loc='upper right')
+    else:
+        axes.legend(loc='lower left')
 
     return figure
 
@@ -123,10 +147,8 @@ def calculate_block(db, GSSNR_numerator, GSSNR_denominator, SSNR, n):
 
 
 def get_parameters(freqArray, db):
-    # TODO: TEST
-    start_time = time()
-
     start = 0
+    limit_freq = 250.0
 
     GSSNR_numerator = 0
     GSSNR_denominator = 0
@@ -135,12 +157,9 @@ def get_parameters(freqArray, db):
     n = []
 
     for i in range(len(freqArray)):
-        if freqArray[i] - freqArray[start] <= 100.0:
+        if freqArray[i] - freqArray[start] <= limit_freq:
             continue
         else:
-            # TODO: TEST
-            print(i)
-
             finish = i
             GSSNR_numerator, GSSNR_denominator, SSNR, n = calculate_block(db[start:finish], GSSNR_numerator,
                                                                           GSSNR_denominator, SSNR, n)
@@ -153,33 +172,24 @@ def get_parameters(freqArray, db):
     GSSNR = GSSNR_numerator / GSSNR_denominator
     SSNR = SSNR / mean(n)
 
-    print('GSSNR SSNR GSSNR SSNR: ', time() - start_time)
-
     return GSSNR, SSNR
 
 
-# TODO: Patent, algorithm
 def get_interval_parameters(freqArray, db):
-    # TODO: TEST
-    start_time = time()
-
     finish = 0
-    k = 1
+    limit_freq = 250.0
+    k = 10
 
     freqs = []
     GSSNR_blocks = []
     SSNR_blocks = []
 
     for i in range(len(freqArray)):
-        # TODO: 100 Hz, too slow
-        if freqArray[i] - freqArray[0] <= 200.0 * k:
+        if freqArray[i] - freqArray[0] <= limit_freq:
             continue
         else:
-            # TODO: TEST
-            print(i)
-
             finish = i
-            n = finish // (10 * k)
+            n = finish // k
             idx = 0
 
             GSSNR_numerator = 0
@@ -206,10 +216,11 @@ def get_interval_parameters(freqArray, db):
             SSNR_block = SSNR / mean(mean_n)
             SSNR_blocks.append(SSNR_block)
 
-            k += 1
+            limit_freq += 250
+            k += 10
 
     if finish < len(freqArray) - 1:
-        n = finish // (10 * k)
+        n = finish // k
         idx = 0
 
         GSSNR_numerator = 0
@@ -237,41 +248,52 @@ def get_interval_parameters(freqArray, db):
         SSNR_block = SSNR / mean(mean_n)
         SSNR_blocks.append(SSNR_block)
 
-    print('GSSNR INTERVAL SSNR INTERVAL: ', time() - start_time)
+    result_GSSNR = gssnr_analysis(GSSNR_blocks)
+    result_SSNR = ssnr_analysis(SSNR_blocks)
 
-    return freqs, GSSNR_blocks, SSNR_blocks
+    return freqs, GSSNR_blocks, SSNR_blocks, result_GSSNR, result_SSNR
 
-# TODO: shitted shit of shit
-# def gssnr_analysis(gssnr_blocks):
-#     gssnr_blocks = gssnr_blocks[6:]
-#     flag = True
-#     model = []
-#     for i in range(1, len(gssnr_blocks)):
-#         if not flag:
-#             if gssnr_blocks[i] - gssnr_blocks[i - 1] <= 0:
-#                 continue
-#             elif gssnr_blocks[i] - gssnr_blocks[i - 1] > 0:
-#                 model.append('min')
-#                 flag = True
-#         else:
-#             if gssnr_blocks[i] - gssnr_blocks[i - 1] >= 0:
-#                 continue
-#             elif gssnr_blocks[i] - gssnr_blocks[i - 1] < 0:
-#                 model.append('max')
-#                 flag = False
-#     if len(model) >= 3 and model[0] == 'max' and model[1] == 'min' and model[len(model) - 1] == 'max':
-#         return True
-#     else:
-#         return False
 
-# def frequency_analysing(self):
-#     GSSNR = get_parameters(freqArray, db)
-#     gssnr_blocks = self.get_interval_parameters(freqArray, db, GSSNR)
-# 
-#     if self.gssnr_analysis(gssnr_blocks):
-#         self.ui.parameters_text.append(
-#             'Требуется проведение дальнейшего анализа, в файл {} возможно вносились изменения\n'.format(
-#                 self.filename))
-#     else:
-#         self.ui.parameters_text.append(
-#             'В файл {} вносились изменения\n'.format(self.filename))
+def gssnr_analysis(GSSNR_blocks):
+    GSSNR_blocks = GSSNR_blocks[6:]
+    flag = True
+    model = []
+    for i in range(1, len(GSSNR_blocks)):
+        if not flag:
+            if GSSNR_blocks[i] - GSSNR_blocks[i - 1] <= 0:
+                continue
+            elif GSSNR_blocks[i] - GSSNR_blocks[i - 1] > 0:
+                model.append('min')
+                flag = True
+        else:
+            if GSSNR_blocks[i] - GSSNR_blocks[i - 1] >= 0:
+                continue
+            elif GSSNR_blocks[i] - GSSNR_blocks[i - 1] < 0:
+                model.append('max')
+                flag = False
+    if len(model) >= 3 and model[0] == 'max' and model[1] == 'min' and model[len(model) - 1] == 'max':
+        return True
+    else:
+        return False
+
+
+def ssnr_analysis(SSNR_blocks):
+    SSNR_blocks = SSNR_blocks[6:]
+    flag = True
+    model = []
+    for i in range(1, len(SSNR_blocks)):
+        if flag:
+            if SSNR_blocks[i] - SSNR_blocks[i - 1] >= 0:
+                continue
+            elif SSNR_blocks[i] - SSNR_blocks[i - 1] < 0:
+                model.append('max')
+                flag = False
+        else:
+            if SSNR_blocks[i] - SSNR_blocks[i - 1] <= 0:
+                continue
+            else:
+                model.append('max')
+    if len(model) == 1:
+        return True
+    else:
+        return False
